@@ -28,9 +28,6 @@ class KontenBudayaController extends Controller implements HasMiddleware
         ];
     }
 
-    /**
-     * Semua konten — dengan filter status, kategori, wilayah, dan search.
-     */
     public function index(Request $request)
     {
         return inertia('konten/index', [
@@ -47,23 +44,20 @@ class KontenBudayaController extends Controller implements HasMiddleware
         ]);
     }
 
-    /**
-     * Detail konten untuk review admin — tampilkan semua data, file, dan riwayat moderasi.
-     */
-    public function show(int $id)
+    // Route model binding — Laravel otomatis cari KontenBudaya berdasarkan slug
+    public function show(KontenBudaya $konten)
     {
-        $konten = $this->kontenService->findById($id);
+        $konten->load([
+            'user', 'category', 'wilayah', 'mediaFiles', 'tags', 'moderationLogs.user',
+        ]);
+
         return inertia('konten/show', [
             'konten' => $konten,
         ]);
     }
 
-    /**
-     * Approve konten → status published.
-     */
-    public function approve(Request $request, int $id)
+    public function approve(Request $request, KontenBudaya $konten)
     {
-        $konten = $this->kontenService->findById($id);
         abort_if($konten->status === 'published', 422, 'Konten sudah tayang.');
 
         $this->kontenService->approve($konten, $request->user());
@@ -73,13 +67,8 @@ class KontenBudayaController extends Controller implements HasMiddleware
             ->with('success', 'Konten berhasil disetujui dan sekarang tayang.');
     }
 
-    /**
-     * Reject konten dengan alasan — wajib isi catatan.
-     */
-    public function reject(RejectKontenRequest $request, int $id)
+    public function reject(RejectKontenRequest $request, KontenBudaya $konten)
     {
-        $konten = $this->kontenService->findById($id);
-
         abort_if($konten->status === 'published', 422, 'Konten sudah tayang, tidak bisa ditolak langsung.');
 
         $this->kontenService->reject($konten, $request->user(), $request->catatan);
@@ -89,12 +78,8 @@ class KontenBudayaController extends Controller implements HasMiddleware
             ->with('success', 'Konten ditolak. Pengguna akan menerima notifikasi beserta alasan penolakan.');
     }
 
-    /**
-     * Hapus konten — admin bisa hapus konten apa pun.
-     */
-    public function destroy(int $id)
+    public function destroy(KontenBudaya $konten)
     {
-        $konten = $this->kontenService->findById($id);
         $this->kontenService->delete($konten);
 
         return redirect()

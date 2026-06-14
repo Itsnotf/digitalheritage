@@ -122,7 +122,7 @@ export default function MemberDashboard({ member_since, total_konten, total_kont
                                         </div>
                                         <StatusBadge status={konten.status} size="sm" />
                                         <Button size="sm" variant="ghost" asChild>
-                                            <Link href={`/kontribusi/${konten.id}`}>Detail</Link>
+                                            <Link href={`/kontribusi/${konten.slug}`}>Detail</Link>
                                         </Button>
                                     </div>
                                 ))}

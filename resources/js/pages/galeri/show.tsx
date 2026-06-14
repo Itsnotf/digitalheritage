@@ -3,10 +3,12 @@ import StarRating from '@/components/star-rating';
 import LevelBadge from '@/components/level-badge';
 import KontenCard from '@/components/konten-card';
 import PublicLayout from '@/layouts/public-layout';
-import { Comment, KontenBudaya } from '@/types';
+import { Comment, KontenBudaya, MediaFile } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
-import { CalendarDays, Eye, Send, Star, Tag } from 'lucide-react';
-import { useState } from 'react';
+import { CalendarDays, Eye, Send, Star } from 'lucide-react';
+import Plyr from 'plyr';
+import 'plyr/dist/plyr.css';
+import { useEffect, useRef, useState } from 'react';
 
 interface Props {
     konten: KontenBudaya & { ratings_count: number; ratings_avg_skor: number | null };
@@ -15,12 +17,96 @@ interface Props {
 }
 
 const FONT = { fontFamily: "'Montserrat', sans-serif" };
+
+// ──────────────────────────────────────────────────────────────
+// VideoSection — Plyr.js player dengan playlist multi-video
+// ──────────────────────────────────────────────────────────────
+function VideoSection({ videoFiles, autoplay = false }: { videoFiles: MediaFile[]; autoplay?: boolean }) {
+    const [activeIndex, setActiveIndex] = useState(0);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const playerRef = useRef<Plyr | null>(null);
+    const activeVideo = videoFiles[activeIndex];
+
+    useEffect(() => {
+        if (!videoRef.current || !activeVideo) return;
+
+        playerRef.current?.destroy();
+
+        playerRef.current = new Plyr(videoRef.current, {
+            controls: [
+                'play-large', 'play', 'progress', 'current-time',
+                'duration', 'mute', 'volume', 'captions', 'fullscreen',
+            ],
+            resetOnEnd: false,
+            fullscreen: { enabled: true, fallback: true, iosNative: false },
+        });
+
+        if (autoplay) {
+            const t = setTimeout(() => playerRef.current?.play(), 400);
+            return () => {
+                clearTimeout(t);
+                playerRef.current?.destroy();
+            };
+        }
+
+        return () => { playerRef.current?.destroy(); };
+    }, [activeIndex]);
+
+    if (!activeVideo) return null;
+
+    const formatDur = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+
+    return (
+        <section className="bg-gray-950">
+            {/* key={activeVideo.id} paksa React remount video element saat video berubah */}
+            <video
+                key={activeVideo.id}
+                ref={videoRef}
+                className="plyr-video w-full"
+                controls
+                playsInline
+            >
+                <source src={`/storage/${activeVideo.url}`} type="video/mp4" />
+                Browser kamu tidak mendukung pemutaran video.
+            </video>
+
+            {/* Playlist tab switcher — tampil hanya jika ada lebih dari 1 video */}
+            {videoFiles.length > 1 && (
+                <div className="px-8 py-4 border-t border-white/6">
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                        <span style={FONT} className="text-[9px] font-black uppercase tracking-widest text-gray-500 mr-3 shrink-0">
+                            Video ({videoFiles.length})
+                        </span>
+                        {videoFiles.map((v, i) => (
+                            <button
+                                key={v.id}
+                                onClick={() => setActiveIndex(i)}
+                                style={FONT}
+                                className={`shrink-0 px-4 py-2 text-[10px] font-black uppercase tracking-wider transition-colors ${
+                                    i === activeIndex
+                                        ? 'bg-[#EDE8DC] text-gray-900'
+                                        : 'border border-white/15 text-gray-400 hover:border-white/30 hover:text-gray-200'
+                                }`}
+                            >
+                                Video {i + 1}
+                                {v.durasi_detik && (
+                                    <span className="ml-2 text-[9px] opacity-60">{formatDur(v.durasi_detik)}</span>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </section>
+    );
+}
+
 const aksiLabel: Record<string, string> = {
     approve: 'Disetujui', reject: 'Ditolak',
     user_revise: 'Memilih revisi', user_decline: 'Tidak direvisi',
 };
 
-function CommentItem({ comment, kontenId }: { comment: Comment; kontenId: number }) {
+function CommentItem({ comment, kontenId }: { comment: Comment; kontenId: string }) {
     const [showReply, setShowReply] = useState(false);
     const [reply, setReply] = useState('');
     const { auth } = usePage<any>().props;
@@ -92,12 +178,12 @@ export default function GaleriShow({ konten, relatedKonten, userRating }: Props)
 
     const submitComment = () => {
         if (!comment.trim()) return;
-        router.post(`/galeri/${konten.id}/komentar`, { isi: comment }, { onSuccess: () => setComment('') });
+        router.post(`/galeri/${konten.slug}/komentar`, { isi: comment }, { onSuccess: () => setComment('') });
     };
 
     const submitRating = (skor: number) => {
         setCurrentRating(skor);
-        router.post(`/galeri/${konten.id}/rating`, { skor }, { preserveScroll: true });
+        router.post(`/galeri/${konten.slug}/rating`, { skor }, { preserveScroll: true });
     };
 
     const visibleComments = (konten.comments ?? []).filter((c) => c.status === 'aktif');
@@ -105,12 +191,26 @@ export default function GaleriShow({ konten, relatedKonten, userRating }: Props)
     return (
         <PublicLayout title={konten.judul}>
 
-            {/* ── Cover image — full-bleed ── */}
-            {konten.cover_url && (
-                <section className="h-[55vh] overflow-hidden bg-gray-800">
-                    <img src={konten.cover_url} alt={konten.judul} className="size-full object-cover" />
-                </section>
-            )}
+            {/* ── Hero: Video Player atau Cover Image ── */}
+            {(() => {
+                const videoFiles = (konten.media_files ?? []).filter(f => f.tipe === 'video');
+                const autoplay = typeof window !== 'undefined'
+                    && new URLSearchParams(window.location.search).get('autoplay') === '1';
+
+                if (videoFiles.length > 0) {
+                    return <VideoSection videoFiles={videoFiles} autoplay={autoplay} />;
+                }
+
+                if (konten.cover_url) {
+                    return (
+                        <section className="h-[55vh] overflow-hidden bg-gray-800">
+                            <img src={konten.cover_url} alt={konten.judul} className="size-full object-cover" />
+                        </section>
+                    );
+                }
+
+                return null;
+            })()}
 
             {/* ── Article Header ── */}
             <section className="bg-[#EDE8DC]">
@@ -298,7 +398,7 @@ export default function GaleriShow({ konten, relatedKonten, userRating }: Props)
                                 )}
 
                                 {visibleComments.length > 0
-                                    ? visibleComments.map((c) => <CommentItem key={c.id} comment={c} kontenId={konten.id} />)
+                                    ? visibleComments.map((c) => <CommentItem key={c.id} comment={c} kontenId={konten.slug} />)
                                     : <p style={FONT} className="py-8 text-[10px] font-black uppercase tracking-widest text-gray-400">Belum ada komentar</p>
                                 }
                             </div>

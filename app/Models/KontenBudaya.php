@@ -28,6 +28,10 @@ class KontenBudaya extends Model
     protected $casts = [
         'approved_at' => 'datetime',
         'view_count'  => 'integer',
+        'user_id'     => 'integer',
+        'category_id' => 'integer',
+        'wilayah_id'  => 'integer',
+        'approved_by' => 'integer',
     ];
 
     // -------------------------------------------------------
@@ -68,6 +72,14 @@ class KontenBudaya extends Model
     public function primaryMedia(): HasOne
     {
         return $this->hasOne(MediaFile::class, 'konten_id')->where('is_primary', true);
+    }
+
+    /** Video pertama — dipakai untuk preview durasi di galeri list */
+    public function firstVideo(): HasOne
+    {
+        return $this->hasOne(MediaFile::class, 'konten_id')
+                    ->where('tipe', 'video')
+                    ->orderBy('urutan');
     }
 
     /** Tags yang melekat pada konten ini */

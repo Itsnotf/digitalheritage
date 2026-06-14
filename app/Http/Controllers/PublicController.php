@@ -42,22 +42,33 @@ class PublicController extends Controller
 
     public function galeri(Request $request)
     {
-        return inertia('galeri/index', [
-            'konten' => KontenBudaya::published()
-                ->with(['category', 'wilayah', 'primaryMedia', 'user'])
-                ->withCount('ratings')
-                ->withAvg('ratings', 'skor')
-                ->when($request->search,      fn($q) => $q->where('judul', 'like', "%{$request->search}%"))
-                ->when($request->category_id, fn($q) => $q->where('category_id', $request->category_id))
-                ->when($request->wilayah_id,  fn($q) => $q->where('wilayah_id', $request->wilayah_id))
-                ->when($request->sort === 'popular', fn($q) => $q->orderByDesc('view_count'))
-                ->when($request->sort !== 'popular', fn($q) => $q->latest('approved_at'))
-                ->paginate(12)
-                ->withQueryString(),
+        // 'video' adalah mode default — hanya tampilkan konten yang punya file video
+        // 'galeri' — tampilkan semua tipe konten
+        $mode = $request->mode === 'galeri' ? 'galeri' : 'video';
 
+        $query = KontenBudaya::published()
+            ->with(['category', 'wilayah', 'primaryMedia', 'user'])
+            ->withCount('ratings')
+            ->withAvg('ratings', 'skor')
+            ->when($request->search,      fn($q) => $q->where('judul', 'like', "%{$request->search}%"))
+            ->when($request->category_id, fn($q) => $q->where('category_id', $request->category_id))
+            ->when($request->wilayah_id,  fn($q) => $q->where('wilayah_id', $request->wilayah_id))
+            ->when($request->sort === 'popular', fn($q) => $q->orderByDesc('view_count'))
+            ->when($request->sort !== 'popular', fn($q) => $q->latest('approved_at'));
+
+        // Mode video: filter hanya konten yang memiliki minimal 1 file video
+        // dan load firstVideo untuk menampilkan durasi di card
+        if ($mode === 'video') {
+            $query
+                ->whereHas('mediaFiles', fn($q) => $q->where('tipe', 'video'))
+                ->with(['firstVideo']);
+        }
+
+        return inertia('galeri/index', [
+            'konten'     => $query->paginate(12)->withQueryString(),
             'kategoris'  => Category::whereNull('parent_id')->orderBy('urutan')->get(),
             'wilayahs'   => Wilayah::orderBy('nama')->get(),
-            'filters'    => $request->only('search', 'category_id', 'wilayah_id', 'sort'),
+            'filters'    => $request->only('search', 'category_id', 'wilayah_id', 'sort', 'mode'),
             'galeriPage' => SitePage::forKey('galeri')->only(['hero_image_url', 'content']),
         ]);
     }

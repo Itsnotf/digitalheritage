@@ -2,7 +2,7 @@ import InputError from '@/components/input-error';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
 import { login } from '@/routes';
-import { store } from '@/routes/password';
+import { email } from '@/routes/password';
 import { Form, Head, Link } from '@inertiajs/react';
 
 const FONT = { fontFamily: "'Montserrat', sans-serif" };
@@ -21,7 +21,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
                 </div>
             )}
 
-            <Form {...store.form()} className="flex flex-col gap-0">
+            <Form {...email.form()} className="flex flex-col gap-0">
                 {({ processing, errors }) => (
                     <>
                         <div className="space-y-8">

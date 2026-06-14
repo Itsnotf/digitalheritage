@@ -28,11 +28,11 @@ export default function KontenShow({ konten }: Props) {
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Semua Konten', href: '/konten' },
-        { title: konten.judul, href: `/konten/${konten.id}` },
+        { title: konten.judul, href: `/konten/${konten.slug}` },
     ];
 
     const handleApprove = () => {
-        router.patch(`/konten/${konten.id}/approve`);
+        router.patch(`/konten/${konten.slug}/approve`);
     };
 
     const handleReject = () => {
@@ -41,7 +41,7 @@ export default function KontenShow({ konten }: Props) {
             return;
         }
         setRejectError('');
-        router.patch(`/konten/${konten.id}/reject`, { catatan: rejectNote });
+        router.patch(`/konten/${konten.slug}/reject`, { catatan: rejectNote });
     };
 
     return (

@@ -28,8 +28,8 @@ export default function KontribusiEdit({ konten, kategoris, wilayahs }: Props) {
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Konten Saya', href: '/kontribusi' },
-        { title: konten.judul, href: `/kontribusi/${konten.id}` },
-        { title: 'Edit', href: `/kontribusi/${konten.id}/edit` },
+        { title: konten.judul, href: `/kontribusi/${konten.slug}` },
+        { title: 'Edit', href: `/kontribusi/${konten.slug}/edit` },
     ];
 
     const existingMedia = (konten.media_files ?? []).filter((m) => !deleteMediaIds.includes(m.id));
@@ -44,7 +44,7 @@ export default function KontribusiEdit({ konten, kategoris, wilayahs }: Props) {
         newFiles.forEach((f) => data.append('files[]', f));
         deleteMediaIds.forEach((id) => data.append('delete_media[]', String(id)));
         if (primaryMediaId) data.append('primary_media', String(primaryMediaId));
-        router.post(`/kontribusi/${konten.id}`, data, { onError: () => setProcessing(false) });
+        router.post(`/kontribusi/${konten.slug}`, data, { onError: () => setProcessing(false) });
     };
 
     return (

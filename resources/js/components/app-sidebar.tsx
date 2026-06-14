@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, CheckSquare, FileText, FolderOpen, KeyIcon, LayoutGrid, MapPin, MessageSquare, Tag, Upload, User } from 'lucide-react';
+import { BookOpen, CheckSquare, FileText, FolderOpen, Globe, KeyIcon, LayoutGrid, MapPin, MessageSquare, Tag, Upload, User } from 'lucide-react';
 import AppLogo from './app-logo';
 import users from '@/routes/users';
 import roles from '@/routes/roles';
@@ -12,6 +12,7 @@ import { dashboard } from '@/routes';
 
 const mainNavItems: NavItem[] = [
     { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
+    { title: 'Halaman Publik', href: '/', icon: Globe, external: true },
 ];
 
 const kontribusiItems: NavItem[] = [

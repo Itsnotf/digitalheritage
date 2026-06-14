@@ -11,7 +11,6 @@ use App\Services\KontenBudayaService;
 use App\Services\MediaFileService;
 use App\Services\WilayahService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Number;
 
 class KontribusiController extends Controller
 {
@@ -22,14 +21,11 @@ class KontribusiController extends Controller
         private WilayahService      $wilayahService,
     ) {}
 
-    /**
-     * Daftar konten milik user yang sedang login.
-     */
     public function index(Request $request)
     {
         return inertia('kontribusi/index', [
             'konten'  => $this->kontenService->getAllByUser(
-                user: $request->user(),
+                user:   $request->user(),
                 search: $request->search,
                 status: $request->status,
             ),
@@ -38,9 +34,6 @@ class KontribusiController extends Controller
         ]);
     }
 
-    /**
-     * Form upload konten baru.
-     */
     public function create()
     {
         return inertia('kontribusi/create', [
@@ -49,13 +42,9 @@ class KontribusiController extends Controller
         ]);
     }
 
-    /**
-     * Simpan konten baru + upload file.
-     */
     public function store(StoreKontribusiRequest $request)
     {
         $konten = $this->kontenService->create($request->validated(), $request->user());
-
 
         if ($request->hasFile('files')) {
             $this->mediaService->storeFiles($konten, $request->file('files'));
@@ -66,56 +55,45 @@ class KontribusiController extends Controller
             ->with('success', 'Konten berhasil dikirim dan sedang menunggu review admin.');
     }
 
-    /**
-     * Detail konten milik user — tampilkan status, riwayat moderasi, dan file.
-     */
-    public function show(int $id)
+    // Route model binding — parameter name harus cocok dengan {kontribusi} di route resource
+    public function show(KontenBudaya $kontribusi)
     {
+        $this->authorizeOwner($kontribusi);
 
-        $konten = $this->kontenService->findById($id);
-
-        $this->authorizeOwner($id);
+        $kontribusi->load([
+            'user', 'category', 'wilayah', 'mediaFiles', 'tags', 'moderationLogs.user',
+        ]);
 
         return inertia('kontribusi/show', [
-            'konten' => $this->kontenService->findById($konten->id),
+            'konten' => $kontribusi,
         ]);
     }
 
-    /**
-     * Form edit konten (hanya bisa jika status pending atau rejected).
-     */
-    public function edit(int $id)
+    public function edit(KontenBudaya $kontribusi)
     {
-        $konten = $this->kontenService->findById($id);
+        $this->authorizeOwner($kontribusi);
+        abort_if($kontribusi->status === 'published', 403, 'Konten yang sudah tayang tidak bisa diedit.');
 
-        $this->authorizeOwner($id);
-        abort_if($konten->status === 'published', 403, 'Konten yang sudah tayang tidak bisa diedit.');
+        $kontribusi->load(['mediaFiles', 'tags', 'category', 'wilayah']);
 
         return inertia('kontribusi/edit', [
-            'konten'    => $this->kontenService->findById($konten->id),
+            'konten'    => $kontribusi,
             'kategoris' => $this->kategoriService->getForSelect(),
             'wilayahs'  => $this->wilayahService->getForSelect(),
         ]);
     }
 
-    /**
-     * Update konten + tambah/hapus file + ubah primary.
-     * Jika sebelumnya rejected → otomatis kembali ke pending (resubmit).
-     */
-    public function update(UpdateKontribusiRequest $request, int $id)
+    public function update(UpdateKontribusiRequest $request, KontenBudaya $kontribusi)
     {
-        $konten = $this->kontenService->findById($id);
+        $this->authorizeOwner($kontribusi);
+        abort_if($kontribusi->status === 'published', 403, 'Konten yang sudah tayang tidak bisa diedit.');
 
-        $this->authorizeOwner($id);
-        abort_if($konten->status === 'published', 403, 'Konten yang sudah tayang tidak bisa diedit.');
+        $this->kontenService->update($kontribusi, $request->validated());
 
-        $this->kontenService->update($konten, $request->validated());
-
-        // Hapus file yang dipilih user untuk dihapus
         if ($request->has('delete_media')) {
             foreach ($request->delete_media as $mediaId) {
                 $media = MediaFile::where('id', $mediaId)
-                                  ->where('konten_id', $konten->id)
+                                  ->where('konten_id', $kontribusi->id)
                                   ->first();
                 if ($media) {
                     $this->mediaService->deleteFile($media);
@@ -123,87 +101,66 @@ class KontribusiController extends Controller
             }
         }
 
-        // Ubah primary jika user memilih file lain
         if ($request->filled('primary_media')) {
             $media = MediaFile::where('id', $request->primary_media)
-                              ->where('konten_id', $konten->id)
+                              ->where('konten_id', $kontribusi->id)
                               ->firstOrFail();
             $this->mediaService->setPrimary($media);
         }
 
-        // Upload file baru jika ada
         if ($request->hasFile('files')) {
-            $this->mediaService->storeFiles($konten, $request->file('files'));
+            $this->mediaService->storeFiles($kontribusi, $request->file('files'));
         }
 
-        $message = $konten->wasChanged('status')
+        $message = $kontribusi->wasChanged('status')
             ? 'Konten berhasil diperbarui dan dikirim ulang untuk review admin.'
             : 'Konten berhasil diperbarui.';
 
         return redirect()
-            ->route('kontribusi.show', $konten)
+            ->route('kontribusi.show', $kontribusi)
             ->with('success', $message);
     }
 
-    /**
-     * Hapus konten (hanya jika bukan published).
-     */
-    public function destroy(int $id)
+    public function destroy(KontenBudaya $kontribusi)
     {
-        $konten = $this->kontenService->findById($id);
+        $this->authorizeOwner($kontribusi);
+        abort_if($kontribusi->status === 'published', 403, 'Konten yang sudah tayang tidak bisa dihapus langsung. Hubungi admin.');
 
-        $this->authorizeOwner($id);
-        abort_if($konten->status === 'published', 403, 'Konten yang sudah tayang tidak bisa dihapus langsung. Hubungi admin.');
-
-        $this->kontenService->delete($konten);
+        $this->kontenService->delete($kontribusi);
 
         return redirect()
             ->route('kontribusi.index')
             ->with('success', 'Konten berhasil dihapus.');
     }
 
-    /**
-     * User memilih untuk merevisi konten yang ditolak → diarahkan ke form edit.
-     */
-    public function respondRevise(int $id)
+    // Parameter {kontribusi} di route revise/decline harus cocok dengan nama ini
+    public function respondRevise(KontenBudaya $kontribusi)
     {
-        $konten = $this->kontenService->findById($id);
+        $this->authorizeOwner($kontribusi);
+        abort_if($kontribusi->status !== 'rejected', 403);
 
-        $this->authorizeOwner($id);
-        abort_if($konten->status !== 'rejected', 403);
-
-        $this->kontenService->respondRevise($konten, request()->user());
+        $this->kontenService->respondRevise($kontribusi, request()->user());
 
         return redirect()
-            ->route('kontribusi.edit', $konten)
+            ->route('kontribusi.edit', $kontribusi)
             ->with('success', 'Silakan perbaiki konten sesuai catatan admin, lalu simpan.');
     }
 
-    /**
-     * User memilih untuk tidak merevisi — penolakan menjadi final.
-     */
-    public function respondDecline(int $id)
+    public function respondDecline(KontenBudaya $kontribusi)
     {
-        $konten = $this->kontenService->findById($id);
+        $this->authorizeOwner($kontribusi);
+        abort_if($kontribusi->status !== 'rejected', 403);
 
-        $this->authorizeOwner($id);
-        abort_if($konten->status !== 'rejected', 403);
-
-        $this->kontenService->respondDecline($konten, request()->user());
+        $this->kontenService->respondDecline($kontribusi, request()->user());
 
         return redirect()
             ->route('kontribusi.index')
             ->with('success', 'Konten ditandai sebagai ditolak final.');
     }
 
-    // -------------------------------------------------------
-    // Private
-    // -------------------------------------------------------
-
-    private function authorizeOwner(int $id): void
+    // (int) cast mencegah strict !== mismatch antar environment database driver
+    private function authorizeOwner(KontenBudaya $konten): void
     {
-        $konten = $this->kontenService->findById($id);
-
-        abort_if($konten->user_id !== request()->user()->id, 403);
+        abort_if((int) $konten->user_id !== (int) auth()->id(), 403);
     }
 }

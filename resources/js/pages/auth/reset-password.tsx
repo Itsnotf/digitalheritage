@@ -1,7 +1,7 @@
 import InputError from '@/components/input-error';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
-import { store } from '@/routes/password';
+import { update } from '@/routes/password';
 import { Form, Head } from '@inertiajs/react';
 
 const FONT = { fontFamily: "'Montserrat', sans-serif" };
@@ -16,9 +16,10 @@ export default function ResetPassword({ token, email }: { token: string; email: 
         >
             <Head title="Reset Kata Sandi" />
 
-            <Form {...store.form({ token, email })} className="flex flex-col gap-0">
+            <Form {...update.form()} className="flex flex-col gap-0">
                 {({ processing, errors }) => (
                     <div className="space-y-8">
+                        <input type="hidden" name="token" value={token} />
                         <div>
                             <label htmlFor="email" style={FONT} className={labelClass}>Alamat Email</label>
                             <input id="email" type="email" name="email" defaultValue={email}

@@ -91,7 +91,7 @@ export default function AdminDashboard({ total_users, total_konten_pending, tota
                                             </p>
                                         </div>
                                         <Button size="sm" variant="outline" asChild>
-                                            <Link href={`/konten/${konten.id}`}>Review</Link>
+                                            <Link href={`/konten/${konten.slug}`}>Review</Link>
                                         </Button>
                                     </div>
                                 ))}

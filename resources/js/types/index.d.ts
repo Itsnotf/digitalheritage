@@ -13,6 +13,7 @@ export interface NavItem {
     icon?: LucideIcon | null;
     permissions?: string[];
     isActive?: boolean;
+    external?: boolean;
 }
 export interface SharedData {
     name: string;
@@ -54,6 +55,9 @@ export interface KontenBudaya {
     user?: User; category?: Category; wilayah?: Wilayah;
     media_files?: MediaFile[]; primary_media?: MediaFile | null;
     tags?: Tag[]; moderation_logs?: ModerationLog[]; comments_count?: number;
+    first_video?: MediaFile;
+    ratings_count?: number;
+    ratings_avg_skor?: number | null;
 }
 export interface Category {
     id: number; nama: string; slug: string; deskripsi: string | null;

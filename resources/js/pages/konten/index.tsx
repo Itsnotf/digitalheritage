@@ -139,7 +139,7 @@ export default function KontenIndex({ konten, kategoris, wilayahs, filters }: Pr
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <Button size="sm" variant="outline" asChild>
-                                                <Link href={`/konten/${item.id}`}>Review</Link>
+                                                <Link href={`/konten/${item.slug}`}>Review</Link>
                                             </Button>
                                         </TableCell>
                                     </TableRow>

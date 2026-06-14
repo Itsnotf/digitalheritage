@@ -7,9 +7,10 @@ import { SharedData } from '@/types';
 interface Props {
     children: ReactNode;
     title?: string;
+    darkMode?: boolean;
 }
 
-export default function PublicLayout({ children, title }: Props) {
+export default function PublicLayout({ children, title, darkMode = false }: Props) {
     const { auth } = usePage<SharedData>().props;
     const [open, setOpen] = useState(false);
     const isLoggedIn = !!auth?.user;
@@ -22,12 +23,19 @@ export default function PublicLayout({ children, title }: Props) {
                 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet" />
             </Head>
 
-            <div style={{ fontFamily: "'Open Sans', sans-serif", backgroundColor: '#EDE8DC' }} className="min-h-screen text-gray-900">
+            <div
+                style={{ fontFamily: "'Open Sans', sans-serif", backgroundColor: darkMode ? '#111827' : '#EDE8DC' }}
+                className={`min-h-screen ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}
+            >
 
                 {/* Header — minimal, editorial */}
-                <header className="fixed top-0 left-0 right-0 z-50 border-b border-gray-900/10 bg-[#EDE8DC]/95 backdrop-blur-sm">
+                <header className={`fixed top-0 left-0 right-0 z-50 border-b backdrop-blur-sm ${
+                    darkMode
+                        ? 'border-white/8 bg-gray-900/95'
+                        : 'border-gray-900/10 bg-[#EDE8DC]/95'
+                }`}>
                     <div className="mx-auto flex h-14 max-w-screen-xl items-center justify-between px-8">
-                        <Link href="/" style={{ fontFamily: "'Montserrat', sans-serif" }} className="text-sm font-black uppercase tracking-widest text-gray-900">
+                        <Link href="/" style={{ fontFamily: "'Montserrat', sans-serif" }} className={`text-sm font-black uppercase tracking-widest ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
                             Budaya<span className="ml-1.5 text-gray-500">Sumsel</span>
                         </Link>
 
@@ -35,7 +43,9 @@ export default function PublicLayout({ children, title }: Props) {
                         <nav className="hidden items-center gap-8 md:flex">
                             {[['Beranda', '/'], ['Galeri', '/galeri'], ['Tentang', '/tentang-kami'], ['Kontak', '/kontak']].map(([label, href]) => (
                                 <Link key={href} href={href} style={{ fontFamily: "'Montserrat', sans-serif" }}
-                                    className="text-xs font-semibold uppercase tracking-widest text-gray-600 hover:text-gray-900 transition-colors">
+                                    className={`text-xs font-semibold uppercase tracking-widest transition-colors ${
+                                        darkMode ? 'text-gray-400 hover:text-gray-100' : 'text-gray-600 hover:text-gray-900'
+                                    }`}>
                                     {label}
                                 </Link>
                             ))}
@@ -73,7 +83,7 @@ export default function PublicLayout({ children, title }: Props) {
                     </div>
 
                     {open && (
-                        <div className="border-t border-gray-900/10 bg-[#EDE8DC] px-8 py-6 md:hidden">
+                        <div className={`border-t px-8 py-6 md:hidden ${darkMode ? 'border-white/8 bg-gray-900' : 'border-gray-900/10 bg-[#EDE8DC]'}`}>
                             <div className="flex flex-col gap-5">
                                 {[['Beranda', '/'], ['Galeri', '/galeri'], ['Tentang', '/tentang-kami'], ['Kontak', '/kontak']].map(([label, href]) => (
                                     <Link key={href} href={href} onClick={() => setOpen(false)}

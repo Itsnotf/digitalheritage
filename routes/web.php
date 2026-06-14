@@ -38,8 +38,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Kontribusi
     Route::resource('kontribusi', KontribusiController::class);
-    Route::patch('kontribusi/{konten}/revise',  [KontribusiController::class, 'respondRevise'])->name('kontribusi.revise');
-    Route::patch('kontribusi/{konten}/decline', [KontribusiController::class, 'respondDecline'])->name('kontribusi.decline');
+    Route::patch('kontribusi/{kontribusi}/revise',  [KontribusiController::class, 'respondRevise'])->name('kontribusi.revise');
+    Route::patch('kontribusi/{kontribusi}/decline', [KontribusiController::class, 'respondDecline'])->name('kontribusi.decline');
 
     // Admin — moderasi konten
     Route::resource('konten', KontenBudayaController::class)->only(['index', 'show', 'destroy']);

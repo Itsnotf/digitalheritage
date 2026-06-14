@@ -148,3 +148,9 @@
 .table-cell-flex {
     @apply flex-1;
 }
+
+/* ── Plyr brand override — Budaya Sumsel ── */
+:root {
+    --plyr-color-main: #111827;
+    --plyr-video-background: #0f172a;
+}

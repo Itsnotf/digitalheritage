@@ -26,7 +26,7 @@ const aksiLabel: Record<string, { label: string; color: string }> = {
 export default function KontribusiShow({ konten }: Props) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Konten Saya', href: '/kontribusi' },
-        { title: konten.judul, href: `/kontribusi/${konten.id}` },
+        { title: konten.judul, href: `/kontribusi/${konten.slug}` },
     ];
 
     const isRejectedAndNeedsResponse = konten.status === 'rejected' &&
@@ -73,7 +73,7 @@ export default function KontribusiShow({ konten }: Props) {
                                 )}
                                 {isRejectedAndNeedsResponse && (
                                     <div className="mt-3 flex flex-wrap gap-2">
-                                        <Button size="sm" asChild onClick={() => router.patch(`/kontribusi/${konten.id}/revise`)}>
+                                        <Button size="sm" asChild onClick={() => router.patch(`/kontribusi/${konten.slug}/revise`)}>
                                             <span className="cursor-pointer">
                                                 <Edit className="size-3.5" /> Saya Ingin Revisi
                                             </span>
@@ -96,7 +96,7 @@ export default function KontribusiShow({ konten }: Props) {
                                                     <AlertDialogCancel>Batal</AlertDialogCancel>
                                                     <AlertDialogAction
                                                         className="bg-destructive text-white"
-                                                        onClick={() => router.patch(`/kontribusi/${konten.id}/decline`)}
+                                                        onClick={() => router.patch(`/kontribusi/${konten.slug}/decline`)}
                                                     >
                                                         Ya, Tidak Direvisi
                                                     </AlertDialogAction>
@@ -202,7 +202,7 @@ export default function KontribusiShow({ konten }: Props) {
                                 <CardContent className="space-y-2">
                                     {konten.status !== 'pending' && (
                                         <Button variant="outline" className="w-full" asChild>
-                                            <Link href={`/kontribusi/${konten.id}/edit`}><Edit /> Edit Konten</Link>
+                                            <Link href={`/kontribusi/${konten.slug}/edit`}><Edit /> Edit Konten</Link>
                                         </Button>
                                     )}
                                     <AlertDialog>
@@ -218,7 +218,7 @@ export default function KontribusiShow({ konten }: Props) {
                                             </AlertDialogHeader>
                                             <AlertDialogFooter>
                                                 <AlertDialogCancel>Batal</AlertDialogCancel>
-                                                <AlertDialogAction className="bg-destructive text-white" onClick={() => router.delete(`/kontribusi/${konten.id}`)}>
+                                                <AlertDialogAction className="bg-destructive text-white" onClick={() => router.delete(`/kontribusi/${konten.slug}`)}>
                                                     Ya, Hapus
                                                 </AlertDialogAction>
                                             </AlertDialogFooter>

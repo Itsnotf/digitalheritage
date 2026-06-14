@@ -71,7 +71,7 @@ export default function KontribusiIndex({ konten, filters }: Props) {
                 ) : (
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {konten.data.map((item) => (
-                            <Link key={item.id} href={`/kontribusi/${item.id}`} className="group block">
+                            <Link key={item.id} href={`/kontribusi/${item.slug}`} className="group block">
                                 <div className="overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-md">
                                     {/* Cover */}
                                     <div className="relative aspect-[16/9] bg-muted">
