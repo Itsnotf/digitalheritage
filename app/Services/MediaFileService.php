@@ -17,6 +17,7 @@ class MediaFileService
     {
         $existingCount  = $konten->mediaFiles()->count();
         $hasPrimary     = $konten->mediaFiles()->where('is_primary', true)->exists();
+        $hasCover       = !is_null($konten->cover_url);
 
         foreach ($files as $index => $file) {
             /** @var UploadedFile $file */
@@ -35,12 +36,25 @@ class MediaFileService
                 'urutan'     => $existingCount + $index,
             ]);
 
-            // Sync cover_url ke konten dari file primary
             if ($isPrimary) {
-                $konten->update(['cover_url' => Storage::url($path)]);
                 $hasPrimary = true;
             }
+
+            // cover_url hanya diambil dari file gambar pertama yang ditemukan
+            if (!$hasCover && $tipe === 'image') {
+                $konten->update(['cover_url' => Storage::url($path)]);
+                $hasCover = true;
+            }
         }
+    }
+
+    /**
+     * Simpan gambar cover khusus dan set sebagai cover_url konten.
+     */
+    public function storeCoverImage(KontenBudaya $konten, UploadedFile $file): void
+    {
+        $path = $file->store("konten/{$konten->id}/covers", 'public');
+        $konten->update(['cover_url' => Storage::url($path)]);
     }
 
     /**
@@ -54,7 +68,10 @@ class MediaFileService
 
         $media->update(['is_primary' => true]);
 
-        $media->konten->update(['cover_url' => Storage::url($media->url)]);
+        // cover_url hanya diperbarui jika file yang dijadikan primary adalah gambar
+        if ($media->tipe === 'image') {
+            $media->konten->update(['cover_url' => Storage::url($media->url)]);
+        }
     }
 
     /**

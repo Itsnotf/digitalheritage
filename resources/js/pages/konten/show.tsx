@@ -1,4 +1,4 @@
-import MediaTypeIcon from '@/components/media-type-icon';
+import MediaPreview from '@/components/media-preview';
 import StatusBadge from '@/components/status-badge';
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -9,11 +9,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, KontenBudaya } from '@/types';
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import {
-    CheckCircle, ChevronLeft, Clock, Eye, FileText, MapPin, Tag, User, XCircle,
+    CheckCircle, ChevronLeft, Eye, FileText, Image as ImageIcon, MapPin, Music, Play, Tag, User, XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
+
+function isImageUrl(url: string): boolean {
+    return /\.(jpe?g|png|webp|gif|avif|svg)(\?|$)/i.test(url);
+}
 
 interface Props { konten: KontenBudaya; flash?: { success?: string } }
 
@@ -87,23 +91,14 @@ export default function KontenShow({ konten }: Props) {
                                         File Media ({konten.media_files.length})
                                     </CardTitle>
                                 </CardHeader>
-                                <CardContent className="space-y-2">
-                                    {konten.media_files.map((file) => (
-                                        <div key={file.id} className="flex items-center gap-3 rounded-lg border p-3">
-                                            <MediaTypeIcon tipe={file.tipe} />
-                                            <div className="min-w-0 flex-1">
-                                                <p className="truncate text-sm font-medium">{file.filename}</p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {file.tipe} · {file.ukuran_kb >= 1024 ? `${(file.ukuran_kb / 1024).toFixed(1)} MB` : `${file.ukuran_kb} KB`}
-                                                    {file.durasi_detik && ` · ${Math.floor(file.durasi_detik / 60)}:${String(file.durasi_detik % 60).padStart(2, '0')}`}
-                                                </p>
-                                            </div>
-                                            {file.is_primary && <Badge variant="secondary" className="text-xs">Cover</Badge>}
-                                            <Button size="sm" variant="outline" asChild>
-                                                <a href={`/storage/${file.url}`} target="_blank" rel="noreferrer">Lihat</a>
-                                            </Button>
-                                        </div>
-                                    ))}
+                                <CardContent>
+                                    <MediaPreview items={konten.media_files.map((f) => ({
+                                        tipe: f.tipe as 'image' | 'video' | 'audio' | 'document',
+                                        url: f.url,
+                                        filename: f.filename,
+                                        ukuran_kb: f.ukuran_kb,
+                                        durasi_detik: f.durasi_detik,
+                                    }))} />
                                 </CardContent>
                             </Card>
                         )}
@@ -229,6 +224,35 @@ export default function KontenShow({ konten }: Props) {
                                 )}
                             </div>
                         )}
+
+                        {/* Cover thumbnail */}
+                        <Card>
+                            <CardHeader><CardTitle className="text-sm text-muted-foreground">Cover Konten</CardTitle></CardHeader>
+                            <CardContent>
+                                {(() => {
+                                    const coverSrc = konten.cover_url && isImageUrl(konten.cover_url) ? konten.cover_url : null;
+                                    const primaryFile = konten.media_files?.find((f) => f.is_primary) ?? konten.media_files?.[0];
+                                    const tipe = primaryFile?.tipe ?? 'document';
+                                    const gradClass = tipe === 'video'
+                                        ? 'bg-gradient-to-br from-stone-700 to-stone-900'
+                                        : tipe === 'audio'
+                                        ? 'bg-gradient-to-br from-[#7c2d12] to-stone-900'
+                                        : 'bg-muted';
+
+                                    return coverSrc ? (
+                                        <img src={coverSrc} alt={konten.judul} className="w-full rounded-lg object-cover aspect-video" />
+                                    ) : (
+                                        <div className={`flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-lg ${gradClass}`}>
+                                            {tipe === 'video' && <Play className="size-8 text-white/60" />}
+                                            {tipe === 'audio' && <Music className="size-8 text-white/60" />}
+                                            {tipe === 'image' && <ImageIcon className="size-8 text-muted-foreground" />}
+                                            {tipe === 'document' && <FileText className="size-8 text-muted-foreground" />}
+                                            <span className="text-xs text-white/40">Tidak ada cover</span>
+                                        </div>
+                                    );
+                                })()}
+                            </CardContent>
+                        </Card>
 
                         {/* Info konten */}
                         <Card>

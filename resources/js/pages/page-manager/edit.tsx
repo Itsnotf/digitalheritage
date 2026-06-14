@@ -18,8 +18,8 @@ interface SitePage {
 interface Props { page: SitePage; flash?: { success?: string } }
 
 const PAGE_LABELS: Record<string, string> = {
-    'beranda': 'Beranda', 'galeri': 'Galeri',
-    'tentang-kami': 'Tentang Kami', 'kontak': 'Kontak',
+    'tentang-kami': 'Tentang Kami',
+    'kontak': 'Kontak',
 };
 
 export default function PageManagerEdit({ page, flash }: Props) {
@@ -139,18 +139,6 @@ export default function PageManagerEdit({ page, flash }: Props) {
                 </Card>
 
                 {/* ── Konten spesifik per halaman ── */}
-                {(page.key === 'beranda' || page.key === 'galeri') && (
-                    <Card>
-                        <CardHeader><CardTitle>Konten</CardTitle></CardHeader>
-                        <CardContent>
-                            <div>
-                                <Label>Tagline</Label>
-                                <Input className="mt-1.5" value={content.tagline ?? ''} onChange={(e) => updateContent('tagline', e.target.value)} placeholder="Teks kecil di atas hero" />
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
-
                 {page.key === 'tentang-kami' && (
                     <Card>
                         <CardHeader><CardTitle>Konten Tentang Kami</CardTitle></CardHeader>

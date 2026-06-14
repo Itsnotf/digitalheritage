@@ -50,6 +50,11 @@ class KontribusiController extends Controller
             $this->mediaService->storeFiles($konten, $request->file('files'));
         }
 
+        // Cover khusus (opsional, override cover dari media files)
+        if ($request->hasFile('cover_image')) {
+            $this->mediaService->storeCoverImage($konten, $request->file('cover_image'));
+        }
+
         return redirect()
             ->route('kontribusi.show', $konten)
             ->with('success', 'Konten berhasil dikirim dan sedang menunggu review admin.');
@@ -110,6 +115,10 @@ class KontribusiController extends Controller
 
         if ($request->hasFile('files')) {
             $this->mediaService->storeFiles($kontribusi, $request->file('files'));
+        }
+
+        if ($request->hasFile('cover_image')) {
+            $this->mediaService->storeCoverImage($kontribusi, $request->file('cover_image'));
         }
 
         $message = $kontribusi->wasChanged('status')

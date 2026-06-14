@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 // -------------------------------------------------------
 // Public — tidak perlu login
 // -------------------------------------------------------
-Route::get('/',              [PublicController::class, 'welcome'])->name('home');
+Route::get('/',              [PublicController::class, 'galeri'])->name('home');
 Route::get('/galeri',        [PublicController::class, 'galeri'])->name('galeri.index');
 Route::get('/galeri/{konten:slug}', [PublicController::class, 'show'])->name('galeri.show');
 Route::get('/tentang-kami',  [PublicController::class, 'tentang'])->name('tentang');

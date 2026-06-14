@@ -23,11 +23,16 @@ class SitePageController extends Controller implements HasMiddleware
     /** Daftar semua halaman yang bisa dikelola */
     public function index()
     {
+        $managed = ['tentang-kami', 'kontak'];
+
         return inertia('page-manager/index', [
-            'pages' => $this->service->getAll()->map(fn($p) => [
-                ...$p->toArray(),
-                'hero_image_url' => $p->hero_image_url,
-            ]),
+            'pages' => $this->service->getAll()
+                ->whereIn('key', $managed)
+                ->values()
+                ->map(fn($p) => [
+                    ...$p->toArray(),
+                    'hero_image_url' => $p->hero_image_url,
+                ]),
             'flash' => ['success' => session('success')],
         ]);
     }

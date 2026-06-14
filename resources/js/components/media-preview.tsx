@@ -1,0 +1,141 @@
+import { FileText, Download } from 'lucide-react';
+import Plyr from 'plyr';
+import 'plyr/dist/plyr.css';
+import { useEffect, useRef } from 'react';
+
+export type PreviewTipe = 'image' | 'video' | 'audio' | 'document';
+
+interface MediaPreviewItem {
+    tipe: PreviewTipe;
+    url: string;
+    filename: string;
+    ukuran_kb?: number;
+    durasi_detik?: number | null;
+    isLocal?: boolean;
+}
+
+function resolveUrl(item: MediaPreviewItem): string {
+    if (item.isLocal) return item.url;
+    return `/storage/${item.url}`;
+}
+
+function formatSize(kb?: number): string {
+    if (!kb) return '';
+    return kb >= 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${kb} KB`;
+}
+
+function formatDur(s?: number | null): string {
+    if (!s) return '';
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+
+function VideoPlayer({ src }: { src: string }) {
+    const ref = useRef<HTMLVideoElement>(null);
+    const playerRef = useRef<Plyr | null>(null);
+
+    useEffect(() => {
+        if (!ref.current) return;
+        playerRef.current = new Plyr(ref.current, {
+            controls: ['play-large', 'play', 'progress', 'current-time', 'duration', 'mute', 'volume', 'fullscreen'],
+            fullscreen: { enabled: true, fallback: true, iosNative: false },
+        });
+        return () => { playerRef.current?.destroy(); };
+    }, []);
+
+    return (
+        <video ref={ref} className="plyr-video w-full" controls playsInline>
+            <source src={src} type="video/mp4" />
+            Browser kamu tidak mendukung pemutaran video.
+        </video>
+    );
+}
+
+function AudioPlayer({ src }: { src: string }) {
+    const ref = useRef<HTMLAudioElement>(null);
+    const playerRef = useRef<Plyr | null>(null);
+
+    useEffect(() => {
+        if (!ref.current) return;
+        playerRef.current = new Plyr(ref.current, {
+            controls: ['play', 'progress', 'current-time', 'duration', 'mute', 'volume'],
+        });
+        return () => { playerRef.current?.destroy(); };
+    }, []);
+
+    return (
+        <audio ref={ref} controls className="w-full">
+            <source src={src} type="audio/mpeg" />
+            Browser kamu tidak mendukung pemutaran audio.
+        </audio>
+    );
+}
+
+export function MediaPreviewItemView({ item, showMeta = true }: { item: MediaPreviewItem; showMeta?: boolean }) {
+    const src = resolveUrl(item);
+
+    if (item.tipe === 'image') {
+        return (
+            <figure className="overflow-hidden rounded-lg border border-black/[0.06] bg-white">
+                <img src={src} alt={item.filename} className="w-full object-contain max-h-[600px]" loading="lazy" />
+                {showMeta && (
+                    <figcaption className="flex items-center justify-between px-3 py-2 text-xs text-stone-500">
+                        <span className="truncate">{item.filename}</span>
+                        {item.ukuran_kb && <span className="shrink-0 ml-2">{formatSize(item.ukuran_kb)}</span>}
+                    </figcaption>
+                )}
+            </figure>
+        );
+    }
+
+    if (item.tipe === 'video') {
+        return (
+            <div className="overflow-hidden rounded-lg">
+                <VideoPlayer src={src} />
+                {showMeta && <p className="mt-1.5 text-xs text-stone-500 truncate">{item.filename}</p>}
+            </div>
+        );
+    }
+
+    if (item.tipe === 'audio') {
+        return (
+            <div className="rounded-lg border border-black/[0.06] bg-white p-4">
+                {showMeta && (
+                    <div className="mb-3 flex items-center justify-between">
+                        <span className="text-sm font-medium text-stone-800 truncate">{item.filename}</span>
+                        {item.durasi_detik && <span className="text-xs text-stone-400 shrink-0 ml-2">{formatDur(item.durasi_detik)}</span>}
+                    </div>
+                )}
+                <AudioPlayer src={src} />
+            </div>
+        );
+    }
+
+    return (
+        <a href={src} target="_blank" rel="noreferrer"
+            className="flex items-center gap-3 rounded-lg border border-black/[0.06] bg-white p-4 transition-colors hover:border-black/[0.16]">
+            <div className="flex size-10 items-center justify-center rounded-md bg-stone-100 shrink-0">
+                <FileText className="size-5 text-stone-500" />
+            </div>
+            <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-stone-800">{item.filename}</p>
+                <p className="text-xs text-stone-400">{formatSize(item.ukuran_kb)}</p>
+            </div>
+            <Download className="size-4 text-stone-400 shrink-0" />
+        </a>
+    );
+}
+
+export default function MediaPreview({ items, showMeta = true }: { items: MediaPreviewItem[]; showMeta?: boolean }) {
+    if (!items || items.length === 0) return null;
+
+    const order: PreviewTipe[] = ['video', 'audio', 'image', 'document'];
+    const sorted = [...items].sort((a, b) => order.indexOf(a.tipe) - order.indexOf(b.tipe));
+
+    return (
+        <div className="flex flex-col gap-4">
+            {sorted.map((item, i) => (
+                <MediaPreviewItemView key={i} item={item} showMeta={showMeta} />
+            ))}
+        </div>
+    );
+}

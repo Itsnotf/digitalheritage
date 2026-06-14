@@ -6,8 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, Category, KontenBudaya, MediaFile, Wilayah } from '@/types';
 import { Head, router } from '@inertiajs/react';
-import { FileText, Star, Trash2, Upload, X } from 'lucide-react';
+import { FileText, ImageIcon, Star, Trash2, Upload, X } from 'lucide-react';
 import { useRef, useState } from 'react';
+
+interface CoverPreview { file: File; preview: string }
 
 interface Props { konten: KontenBudaya; kategoris: Category[]; wilayahs: Wilayah[] }
 
@@ -21,10 +23,12 @@ export default function KontribusiEdit({ konten, kategoris, wilayahs }: Props) {
     const [tags, setTags] = useState<string[]>(konten.tags?.map((t) => t.nama) ?? []);
     const [tagInput, setTagInput] = useState('');
     const [newFiles, setNewFiles] = useState<File[]>([]);
+    const [coverImage, setCoverImage] = useState<CoverPreview | null>(null);
     const [deleteMediaIds, setDeleteMediaIds] = useState<number[]>([]);
     const [primaryMediaId, setPrimaryMediaId] = useState<number | null>(null);
     const [processing, setProcessing] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const coverInputRef = useRef<HTMLInputElement>(null);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Konten Saya', href: '/kontribusi' },
@@ -33,6 +37,17 @@ export default function KontribusiEdit({ konten, kategoris, wilayahs }: Props) {
     ];
 
     const existingMedia = (konten.media_files ?? []).filter((m) => !deleteMediaIds.includes(m.id));
+
+    const handleCoverChange = (file: File) => {
+        if (!file.type.startsWith('image/')) return;
+        if (coverImage?.preview) URL.revokeObjectURL(coverImage.preview);
+        setCoverImage({ file, preview: URL.createObjectURL(file) });
+    };
+
+    const removeCover = () => {
+        if (coverImage?.preview) URL.revokeObjectURL(coverImage.preview);
+        setCoverImage(null);
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -44,6 +59,7 @@ export default function KontribusiEdit({ konten, kategoris, wilayahs }: Props) {
         newFiles.forEach((f) => data.append('files[]', f));
         deleteMediaIds.forEach((id) => data.append('delete_media[]', String(id)));
         if (primaryMediaId) data.append('primary_media', String(primaryMediaId));
+        if (coverImage) data.append('cover_image', coverImage.file);
         router.post(`/kontribusi/${konten.slug}`, data, { onError: () => setProcessing(false) });
     };
 
@@ -96,6 +112,47 @@ export default function KontribusiEdit({ konten, kategoris, wilayahs }: Props) {
                                         {tags.map((t) => (<span key={t} className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs">{t}<button type="button" onClick={() => setTags(tags.filter((x) => x !== t))}><X className="size-3" /></button></span>))}
                                     </div>
                                 </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Gambar Cover <span className="font-normal text-muted-foreground text-sm">(Opsional)</span></CardTitle>
+                                <CardDescription>Ganti thumbnail konten. Diperlukan jika file media hanya berupa audio atau video.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                {konten.cover_url && /\.(jpe?g|png|webp|gif|avif)(\?|$)/i.test(konten.cover_url) && !coverImage && (
+                                    <div className="mb-3">
+                                        <p className="mb-1.5 text-xs text-muted-foreground">Cover saat ini</p>
+                                        <img src={konten.cover_url} alt="Cover" className="aspect-video w-full max-w-xs rounded-lg object-cover border" />
+                                    </div>
+                                )}
+                                {coverImage ? (
+                                    <div className="relative w-full max-w-xs">
+                                        <img src={coverImage.preview} alt="Cover baru" className="aspect-video w-full rounded-lg object-cover border" />
+                                        <button type="button" onClick={removeCover}
+                                            className="absolute right-2 top-2 rounded-full bg-black/60 p-1 text-white hover:bg-black/80">
+                                            <X className="size-3.5" />
+                                        </button>
+                                        <p className="mt-1.5 truncate text-xs text-muted-foreground">{coverImage.file.name}</p>
+                                    </div>
+                                ) : (
+                                    <div
+                                        className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 text-center transition-colors hover:border-primary/50 hover:bg-muted/50"
+                                        onClick={() => coverInputRef.current?.click()}
+                                    >
+                                        <ImageIcon className="size-6 text-muted-foreground" />
+                                        <p className="text-sm font-medium">{konten.cover_url ? 'Ganti gambar cover' : 'Pilih gambar cover'}</p>
+                                        <p className="text-xs text-muted-foreground">JPG, PNG, WEBP · Maks. 5MB</p>
+                                    </div>
+                                )}
+                                <input
+                                    ref={coverInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleCoverChange(f); e.target.value = ''; }}
+                                />
                             </CardContent>
                         </Card>
 

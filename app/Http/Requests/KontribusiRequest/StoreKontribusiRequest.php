@@ -22,6 +22,9 @@ class StoreKontribusiRequest extends FormRequest
             'tags'        => ['nullable', 'array', 'max:10'],
             'tags.*'      => ['string', 'max:50'],
 
+            // Gambar cover khusus (opsional) — hanya berlaku untuk konten audio/video
+            'cover_image' => ['nullable', 'image', 'max:5120'],
+
             // File media — wajib upload minimal 1 file
             'files'       => ['required', 'array', 'min:1', 'max:10'],
             'files.*'     => [

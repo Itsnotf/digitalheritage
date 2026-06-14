@@ -9,6 +9,8 @@ import { Head, router } from '@inertiajs/react';
 import { FileText, Headphones, ImageIcon, Upload, Video, X } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
 
+interface CoverPreview { file: File; preview: string }
+
 interface Props { kategoris: Category[]; wilayahs: Wilayah[] }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -34,12 +36,14 @@ function FileIcon({ tipe }: { tipe: string }) {
 
 export default function KontribusiCreate({ kategoris, wilayahs }: Props) {
     const [files, setFiles] = useState<FilePreview[]>([]);
+    const [coverImage, setCoverImage] = useState<CoverPreview | null>(null);
     const [tags, setTags] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState('');
     const [isDragging, setIsDragging] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [processing, setProcessing] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const coverInputRef = useRef<HTMLInputElement>(null);
 
     const [form, setForm] = useState({
         judul: '', deskripsi: '', category_id: '', wilayah_id: '',
@@ -48,7 +52,9 @@ export default function KontribusiCreate({ kategoris, wilayahs }: Props) {
     const addFiles = useCallback((newFiles: File[]) => {
         const previews: FilePreview[] = newFiles.map((file) => {
             const tipe = detectTipe(file);
-            const preview = tipe === 'image' ? URL.createObjectURL(file) : undefined;
+            const preview = (tipe === 'image' || tipe === 'video' || tipe === 'audio')
+                ? URL.createObjectURL(file)
+                : undefined;
             return { file, preview, tipe };
         });
         setFiles((prev) => [...prev, ...previews].slice(0, 10));
@@ -77,6 +83,17 @@ export default function KontribusiCreate({ kategoris, wilayahs }: Props) {
         }
     };
 
+    const handleCoverChange = (file: File) => {
+        if (!file.type.startsWith('image/')) return;
+        if (coverImage?.preview) URL.revokeObjectURL(coverImage.preview);
+        setCoverImage({ file, preview: URL.createObjectURL(file) });
+    };
+
+    const removeCover = () => {
+        if (coverImage?.preview) URL.revokeObjectURL(coverImage.preview);
+        setCoverImage(null);
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const newErrors: Record<string, string> = {};
@@ -93,6 +110,7 @@ export default function KontribusiCreate({ kategoris, wilayahs }: Props) {
         Object.entries(form).forEach(([k, v]) => data.append(k, v));
         tags.forEach((t) => data.append('tags[]', t));
         files.forEach((f) => data.append('files[]', f.file));
+        if (coverImage) data.append('cover_image', coverImage.file);
 
         router.post('/kontribusi', data, {
             onError: (e) => { setErrors(e); setProcessing(false); },
@@ -205,6 +223,45 @@ export default function KontribusiCreate({ kategoris, wilayahs }: Props) {
                             </CardContent>
                         </Card>
 
+                        {/* Cover image */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Gambar Cover <span className="font-normal text-muted-foreground text-sm">(Opsional)</span></CardTitle>
+                                <CardDescription>
+                                    Thumbnail yang ditampilkan di daftar konten. Wajib diisi jika file media hanya berupa audio atau video.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                {coverImage ? (
+                                    <div className="relative w-full max-w-xs">
+                                        <img src={coverImage.preview} alt="Cover" className="aspect-video w-full rounded-lg object-cover border" />
+                                        <button type="button" onClick={removeCover}
+                                            className="absolute right-2 top-2 rounded-full bg-black/60 p-1 text-white hover:bg-black/80">
+                                            <X className="size-3.5" />
+                                        </button>
+                                        <p className="mt-1.5 truncate text-xs text-muted-foreground">{coverImage.file.name}</p>
+                                    </div>
+                                ) : (
+                                    <div
+                                        className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 text-center transition-colors hover:border-primary/50 hover:bg-muted/50"
+                                        onClick={() => coverInputRef.current?.click()}
+                                    >
+                                        <ImageIcon className="size-7 text-muted-foreground" />
+                                        <p className="text-sm font-medium">Pilih gambar cover</p>
+                                        <p className="text-xs text-muted-foreground">JPG, PNG, WEBP · Maks. 5MB</p>
+                                    </div>
+                                )}
+                                <input
+                                    ref={coverInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleCoverChange(f); e.target.value = ''; }}
+                                />
+                                {errors.cover_image && <p className="mt-1 text-xs text-destructive">{errors.cover_image}</p>}
+                            </CardContent>
+                        </Card>
+
                         {/* Upload file */}
                         <Card>
                             <CardHeader>
@@ -239,30 +296,38 @@ export default function KontribusiCreate({ kategoris, wilayahs }: Props) {
 
                                 {errors.files && <p className="text-xs text-destructive">{errors.files}</p>}
 
-                                {/* Preview files */}
+                                {/* Preview files — INLINE: gambar tampil, video & audio bisa diputar */}
                                 {files.length > 0 && (
-                                    <div className="space-y-2">
+                                    <div className="space-y-4">
                                         {files.map((f, i) => (
-                                            <div key={i} className="flex items-center gap-3 rounded-lg border bg-muted/30 p-3">
-                                                {f.preview ? (
-                                                    <img src={f.preview} alt="" className="size-10 rounded object-cover" />
-                                                ) : (
-                                                    <div className="flex size-10 items-center justify-center rounded bg-background">
+                                            <div key={i} className="rounded-lg border bg-muted/20 p-3">
+                                                <div className="mb-2 flex items-center justify-between gap-3">
+                                                    <div className="flex items-center gap-2 min-w-0">
                                                         <FileIcon tipe={f.tipe} />
+                                                        <span className="truncate text-sm font-medium">{f.file.name}</span>
+                                                        {i === 0 && (
+                                                            <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">Cover</span>
+                                                        )}
                                                     </div>
-                                                )}
-                                                <div className="min-w-0 flex-1">
-                                                    <p className="truncate text-sm font-medium">{f.file.name}</p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {f.tipe} · {f.file.size >= 1048576 ? `${(f.file.size / 1048576).toFixed(1)} MB` : `${Math.round(f.file.size / 1024)} KB`}
-                                                    </p>
+                                                    <button type="button" onClick={() => removeFile(i)} className="shrink-0 text-muted-foreground hover:text-foreground">
+                                                        <X className="size-4" />
+                                                    </button>
                                                 </div>
-                                                {i === 0 && (
-                                                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">Cover</span>
+
+                                                {f.tipe === 'image' && f.preview && (
+                                                    <img src={f.preview} alt={f.file.name} className="max-h-80 w-full rounded-md object-contain bg-black/5" />
                                                 )}
-                                                <button type="button" onClick={() => removeFile(i)} className="text-muted-foreground hover:text-foreground">
-                                                    <X className="size-4" />
-                                                </button>
+                                                {f.tipe === 'video' && f.preview && (
+                                                    <video src={f.preview} controls className="max-h-80 w-full rounded-md bg-black" />
+                                                )}
+                                                {f.tipe === 'audio' && f.preview && (
+                                                    <audio src={f.preview} controls className="w-full" />
+                                                )}
+                                                {f.tipe === 'document' && (
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {f.file.size >= 1048576 ? `${(f.file.size / 1048576).toFixed(1)} MB` : `${Math.round(f.file.size / 1024)} KB`} · Dokumen (preview tidak tersedia)
+                                                    </p>
+                                                )}
                                             </div>
                                         ))}
                                     </div>

@@ -3,30 +3,37 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class UserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
+        // Admin default
         $admin = User::firstOrCreate(
-            ['email' => 'admin@gmail.com'],
+            ['email' => 'admin@budayasumsel.id'],
             [
-                'name' => 'Admin',
-                'password' => 'password',
+                'name'               => 'Admin Budaya Sumsel',
+                'password'           => bcrypt('password'),
+                'email_verified_at'  => now(),
+            ]
+        );
+        $admin->assignRole('admin');
+
+        // Sample user biasa untuk development
+        $user = User::firstOrCreate(
+            ['email' => 'user@budayasumsel.id'],
+            [
+                'name'              => 'Kontributor Demo',
+                'password'          => bcrypt('password'),
                 'email_verified_at' => now(),
             ]
         );
+        $user->assignRole('user');
 
-        $admin->assignRole('admin');
-
-        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'user']);
-        User::factory(10)->create()->each(function ($user) {
-            $user->assignRole('user');
-        });
+        // 8 user tambahan (factory) — hanya saat fresh seed
+        if (User::count() < 3) {
+            User::factory(8)->create()->each(fn($u) => $u->assignRole('user'));
+        }
     }
 }

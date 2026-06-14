@@ -12,8 +12,33 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, Category, KontenBudaya, Paginated, Wilayah } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import { FileText, Search } from 'lucide-react';
+import { FileText, Music, Play, Search } from 'lucide-react';
 import { useState } from 'react';
+
+function isImageUrl(url: string): boolean {
+    return /\.(jpe?g|png|webp|gif|avif|svg)(\?|$)/i.test(url);
+}
+
+function ThumbnailCell({ item }: { item: KontenBudaya }) {
+    const coverSrc = item.cover_url && isImageUrl(item.cover_url) ? item.cover_url : null;
+    const tipe = item.primary_media?.tipe ?? 'document';
+
+    if (coverSrc) {
+        return <img src={coverSrc} alt="" className="size-full object-cover" />;
+    }
+    const cls = tipe === 'video'
+        ? 'flex size-full items-center justify-center bg-gradient-to-br from-stone-600 to-stone-900'
+        : tipe === 'audio'
+        ? 'flex size-full items-center justify-center bg-gradient-to-br from-[#7c2d12] to-stone-900'
+        : 'flex size-full items-center justify-center bg-muted';
+    return (
+        <div className={cls}>
+            {tipe === 'video' && <Play className="size-3.5 text-white/70" />}
+            {tipe === 'audio' && <Music className="size-3.5 text-white/70" />}
+            {(tipe === 'image' || tipe === 'document') && <FileText className="size-4 text-muted-foreground" />}
+        </div>
+    );
+}
 
 interface Props {
     konten: Paginated<KontenBudaya>;
@@ -118,13 +143,7 @@ export default function KontenIndex({ konten, kategoris, wilayahs, filters }: Pr
                                     <TableRow key={item.id}>
                                         <TableCell>
                                             <div className="size-10 overflow-hidden rounded-md bg-muted">
-                                                {item.cover_url ? (
-                                                    <img src={item.cover_url} alt="" className="size-full object-cover" />
-                                                ) : (
-                                                    <div className="flex size-full items-center justify-center">
-                                                        <FileText className="size-4 text-muted-foreground" />
-                                                    </div>
-                                                )}
+                                                <ThumbnailCell item={item} />
                                             </div>
                                         </TableCell>
                                         <TableCell>

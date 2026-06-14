@@ -2,18 +2,18 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
 
 class PermissionSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
+        // Reset cache permission Spatie agar assignment langsung efektif
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
         foreach (array_keys(config('starterkit.permissions')) as $permission) {
-            \Spatie\Permission\Models\Permission::create(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission]);
         }
     }
 }

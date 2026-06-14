@@ -2,21 +2,36 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RoleSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        foreach (config('starterkit.roles') as $role) {
-            \Spatie\Permission\Models\Role::create(['name' => $role]);
-        }
+        // =========================================================
+        // ADMIN
+        // =========================================================
+        // Mendapat akses penuh ke seluruh permission yang terdaftar:
+        // - Manajemen user & role
+        // - Moderasi konten (lihat, setujui, tolak, hapus)
+        // - Manajemen kategori, wilayah, tag
+        // - Moderasi komentar
+        // - Manajemen halaman (CMS)
+        // - Monitoring aktivitas platform
+        // =========================================================
+        $admin = Role::firstOrCreate(['name' => 'admin']);
+        $admin->syncPermissions(Permission::all());
 
-        $admin = \Spatie\Permission\Models\Role::findByName(config('starterkit.default_admin_role'));
-        $admin->givePermissionTo(\Spatie\Permission\Models\Permission::all());
+        // =========================================================
+        // USER
+        // =========================================================
+        // Pengguna biasa tidak memerlukan permission Spatie.
+        // Seluruh akses mereka (kontribusi, rating, komentar)
+        // dikontrol via middleware `auth`, bukan permission middleware.
+        // =========================================================
+        $user = Role::firstOrCreate(['name' => 'user']);
+        $user->syncPermissions([]);
     }
 }

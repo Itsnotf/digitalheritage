@@ -7,8 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, KontenBudaya, Paginated } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import { BookOpen, Eye, PlusCircle, Search } from 'lucide-react';
+import { BookOpen, Eye, FileText, Music, Play, PlusCircle, Search } from 'lucide-react';
 import { useState } from 'react';
+
+function isImageUrl(url: string): boolean {
+    return /\.(jpe?g|png|webp|gif|avif|svg)(\?|$)/i.test(url);
+}
 
 interface Props {
     konten: Paginated<KontenBudaya>;
@@ -73,15 +77,26 @@ export default function KontribusiIndex({ konten, filters }: Props) {
                         {konten.data.map((item) => (
                             <Link key={item.id} href={`/kontribusi/${item.slug}`} className="group block">
                                 <div className="overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-md">
-                                    {/* Cover */}
-                                    <div className="relative aspect-[16/9] bg-muted">
-                                        {item.cover_url ? (
+                                                    {/* Cover */}
+                                    <div className="relative aspect-[16/9] overflow-hidden bg-muted">
+                                        {item.cover_url && isImageUrl(item.cover_url) ? (
                                             <img src={item.cover_url} alt={item.judul} className="size-full object-cover transition-transform group-hover:scale-105" />
-                                        ) : (
-                                            <div className="flex size-full items-center justify-center">
-                                                <BookOpen className="size-10 text-muted-foreground/40" />
-                                            </div>
-                                        )}
+                                        ) : (() => {
+                                            const tipe = item.primary_media?.tipe ?? 'document';
+                                            const gradClass = tipe === 'video'
+                                                ? 'bg-gradient-to-br from-stone-700 to-stone-900'
+                                                : tipe === 'audio'
+                                                ? 'bg-gradient-to-br from-[#7c2d12] to-stone-900'
+                                                : 'bg-muted';
+                                            return (
+                                                <div className={`flex size-full flex-col items-center justify-center gap-1.5 ${gradClass}`}>
+                                                    {tipe === 'video' && <Play className="size-8 text-white/60" />}
+                                                    {tipe === 'audio' && <Music className="size-8 text-white/60" />}
+                                                    {tipe === 'document' && <FileText className="size-8 text-muted-foreground/40" />}
+                                                    {tipe === 'image' && <BookOpen className="size-8 text-muted-foreground/40" />}
+                                                </div>
+                                            );
+                                        })()}
                                         <div className="absolute top-2 left-2">
                                             <StatusBadge status={item.status} size="sm" />
                                         </div>

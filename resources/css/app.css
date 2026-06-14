@@ -151,6 +151,7 @@
 
 /* ── Plyr brand override — Budaya Sumsel ── */
 :root {
-    --plyr-color-main: #111827;
-    --plyr-video-background: #0f172a;
+    --plyr-color-main: #c2410c;
+    --plyr-audio-controls-background: #ffffff;
+    --plyr-audio-control-color: #57534e;
 }

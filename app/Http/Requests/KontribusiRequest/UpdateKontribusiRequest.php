@@ -22,6 +22,9 @@ class UpdateKontribusiRequest extends FormRequest
             'tags'        => ['nullable', 'array', 'max:10'],
             'tags.*'      => ['string', 'max:50'],
 
+            // Gambar cover khusus (opsional)
+            'cover_image' => ['nullable', 'image', 'max:5120'],
+
             // File tambahan — opsional saat update
             'files'       => ['nullable', 'array', 'max:10'],
             'files.*'     => [

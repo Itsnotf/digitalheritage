@@ -13,10 +13,8 @@ interface Props { pages: SitePage[]; flash?: { success?: string } }
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Manajemen Halaman', href: '/halaman' }];
 
 const PAGE_LABELS: Record<string, { label: string; url: string; desc: string }> = {
-    'beranda':      { label: 'Beranda',      url: '/',             desc: 'Landing page utama — hero image dan tagline' },
-    'galeri':       { label: 'Galeri',       url: '/galeri',       desc: 'Halaman browse konten — hero image' },
     'tentang-kami': { label: 'Tentang Kami', url: '/tentang-kami', desc: 'Profil platform, visi, misi, dan section konten' },
-    'kontak':       { label: 'Kontak',       url: '/kontak',       desc: 'Informasi kontak dan media sosial' },
+    'kontak':       { label: 'Kontak',       url: '/kontak',       desc: 'Informasi kontak — alamat, telepon, email, jam operasional' },
 };
 
 export default function PageManagerIndex({ pages }: Props) {
