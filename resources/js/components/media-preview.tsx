@@ -9,6 +9,7 @@ interface MediaPreviewItem {
     tipe: PreviewTipe;
     url: string;
     filename: string;
+    mime_type?: string;
     ukuran_kb?: number;
     durasi_detik?: number | null;
     isLocal?: boolean;
@@ -29,7 +30,7 @@ function formatDur(s?: number | null): string {
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
 
-function VideoPlayer({ src }: { src: string }) {
+function VideoPlayer({ src, mimeType, autoplay = false }: { src: string; mimeType?: string; autoplay?: boolean }) {
     const ref = useRef<HTMLVideoElement>(null);
     const playerRef = useRef<Plyr | null>(null);
 
@@ -38,19 +39,25 @@ function VideoPlayer({ src }: { src: string }) {
         playerRef.current = new Plyr(ref.current, {
             controls: ['play-large', 'play', 'progress', 'current-time', 'duration', 'mute', 'volume', 'fullscreen'],
             fullscreen: { enabled: true, fallback: true, iosNative: false },
+            autoplay,
+            muted: autoplay,
         });
         return () => { playerRef.current?.destroy(); };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (
-        <video ref={ref} className="plyr-video w-full" controls playsInline>
-            <source src={src} type="video/mp4" />
+        <video ref={ref} className="plyr-video w-full" controls playsInline muted={autoplay} autoPlay={autoplay}>
+            {/* Tipe MIME asli dari file yang diupload — bukan hardcode, karena format yang diterima
+                bukan cuma mp4 (webm & mov juga valid). Salah declare type bikin browser nolak mainkan
+                sumbernya tanpa pesan error apa pun ke user. */}
+            <source src={src} type={mimeType || 'video/mp4'} />
             Browser kamu tidak mendukung pemutaran video.
         </video>
     );
 }
 
-function AudioPlayer({ src }: { src: string }) {
+function AudioPlayer({ src, mimeType }: { src: string; mimeType?: string }) {
     const ref = useRef<HTMLAudioElement>(null);
     const playerRef = useRef<Plyr | null>(null);
 
@@ -64,22 +71,32 @@ function AudioPlayer({ src }: { src: string }) {
 
     return (
         <audio ref={ref} controls className="w-full">
-            <source src={src} type="audio/mpeg" />
+            {/* Sama seperti video — pakai mime_type asli, bukan hardcode 'audio/mpeg',
+                karena wav/ogg/m4a juga format yang diterima saat upload. */}
+            <source src={src} type={mimeType || 'audio/mpeg'} />
             Browser kamu tidak mendukung pemutaran audio.
         </audio>
     );
 }
 
-export function MediaPreviewItemView({ item, showMeta = true, fullscreen = false }: { item: MediaPreviewItem; showMeta?: boolean; fullscreen?: boolean }) {
+export function MediaPreviewItemView({
+    item,
+    showMeta = true,
+    fullscreen = false,
+    autoplay = false,
+}: {
+    item: MediaPreviewItem;
+    showMeta?: boolean;
+    fullscreen?: boolean;
+    autoplay?: boolean;
+}) {
     const src = resolveUrl(item);
 
     if (item.tipe === 'image') {
         if (fullscreen) {
-            return (
-                <div className="flex h-full w-full items-center justify-center">
-                    <img src={src} alt={item.filename} className="max-h-full max-w-full object-contain" loading="lazy" />
-                </div>
-            );
+            // object-cover: gambar di-crop biar penuh layar (gak ada bar hitam),
+            // sengaja gak pakai object-contain lagi sesuai keputusan desain.
+            return <img src={src} alt={item.filename} className="size-full object-cover" loading="lazy" />;
         }
         return (
             <figure className="overflow-hidden rounded-lg border border-black/[0.06] bg-white">
@@ -98,13 +115,13 @@ export function MediaPreviewItemView({ item, showMeta = true, fullscreen = false
         if (fullscreen) {
             return (
                 <div className="flex h-full w-full max-h-full max-w-full items-center justify-center">
-                    <VideoPlayer src={src} />
+                    <VideoPlayer src={src} mimeType={item.mime_type} autoplay={autoplay} />
                 </div>
             );
         }
         return (
             <div className="overflow-hidden rounded-lg">
-                <VideoPlayer src={src} />
+                <VideoPlayer src={src} mimeType={item.mime_type} />
                 {showMeta && <p className="mt-1.5 text-xs text-stone-500 truncate">{item.filename}</p>}
             </div>
         );
@@ -119,7 +136,7 @@ export function MediaPreviewItemView({ item, showMeta = true, fullscreen = false
                         {item.durasi_detik && <span className="text-xs text-stone-400 shrink-0 ml-2">{formatDur(item.durasi_detik)}</span>}
                     </div>
                 )}
-                <AudioPlayer src={src} />
+                <AudioPlayer src={src} mimeType={item.mime_type} />
             </div>
         );
     }

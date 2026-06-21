@@ -96,6 +96,7 @@ export default function KontenShow({ konten }: Props) {
                                         tipe: f.tipe as 'image' | 'video' | 'audio' | 'document',
                                         url: f.url,
                                         filename: f.filename,
+                                        mime_type: f.mime_type,
                                         ukuran_kb: f.ukuran_kb,
                                         durasi_detik: f.durasi_detik,
                                     }))} />

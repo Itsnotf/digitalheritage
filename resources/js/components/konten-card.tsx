@@ -296,6 +296,16 @@ export default function KontenCard({ konten, previewSeconds = 4 }: Props) {
                     </>
                 )}
             </div>
+
+            {tipe === 'audio' && (
+                <Link
+                    href={`/galeri/${konten.slug}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="mt-1.5 text-[11px] font-semibold text-stone-400 transition-colors hover:text-[#c2410c]"
+                >
+                    Lihat detail →
+                </Link>
+            )}
         </div>
     );
 
