@@ -2,17 +2,12 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { Link, Head, Form } from '@inertiajs/react';
 import { Input } from '@/components/ui/input';
-import { BreadcrumbItem } from '@/types';
+import { BreadcrumbItem, Permission } from '@/types';
 import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card } from '@/components/ui/card';
-
-interface Permission {
-    id: number;
-    name: string;
-}
 
 interface Props {
     permissions: Permission[];

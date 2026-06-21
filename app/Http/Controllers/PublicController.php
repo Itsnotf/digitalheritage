@@ -5,33 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\KontenBudaya;
 use App\Models\SitePage;
-use App\Models\User;
 use App\Models\Wilayah;
 use Illuminate\Http\Request;
 
 class PublicController extends Controller
 {
-    public function welcome(Request $request)
-    {
-        $tipe = $request->tipe;
-
-        return inertia('welcome', [
-            'konten' => KontenBudaya::published()
-                ->with(['category', 'wilayah', 'primaryMedia', 'firstVideo', 'user'])
-                ->withCount('ratings')
-                ->withAvg('ratings', 'skor')
-                ->when($tipe, fn($q) => $q->whereHas('mediaFiles', fn($m) => $m->where('tipe', $tipe)))
-                ->latest('approved_at')
-                ->paginate(24)
-                ->withQueryString(),
-
-            'kategoris' => Category::withCount(['kontenBudayas' => fn($q) => $q->published()])
-                ->whereNull('parent_id')->orderBy('urutan')->get(),
-
-            'filters' => $request->only('tipe'),
-        ]);
-    }
-
     public function galeri(Request $request)
     {
         $tipe = $request->tipe;

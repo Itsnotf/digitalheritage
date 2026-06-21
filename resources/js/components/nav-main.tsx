@@ -31,7 +31,7 @@ export function NavMain({ section, items = [] }: { items: NavItem[], section?: s
                             tooltip={{ children: item.title }}
                         >
                             {item.external ? (
-                                <a href={item.href} target="_blank" rel="noopener noreferrer">
+                                <a href={resolveUrl(item.href)} target="_blank" rel="noopener noreferrer">
                                     {item.icon && <item.icon />}
                                     <span>{item.title}</span>
                                 </a>
