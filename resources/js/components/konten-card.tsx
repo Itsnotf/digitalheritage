@@ -58,7 +58,7 @@ export default function KontenCard({ konten, previewSeconds = 4 }: Props) {
     const durasi = videoFile?.durasi_detik ?? audioFile?.durasi_detik ?? konten.primary_media?.durasi_detik;
 
     const coverSrc = konten.cover_url && isImageUrl(konten.cover_url) ? konten.cover_url : null;
-    const videoSrc = videoFile?.url ?? null;
+    const videoSrc = videoFile?.url ? `/storage/${videoFile.url}` : null;
     const canPreviewVideo = tipe === 'video' && !!videoSrc;
 
     const typeLabel =
