@@ -24,11 +24,13 @@ export default function KontribusiEdit({ konten, kategoris, wilayahs }: Props) {
     const [tagInput, setTagInput] = useState('');
     const [newFiles, setNewFiles] = useState<File[]>([]);
     const [coverImage, setCoverImage] = useState<CoverPreview | null>(null);
+    const [suratFile, setSuratFile] = useState<File | null>(null);
     const [deleteMediaIds, setDeleteMediaIds] = useState<number[]>([]);
     const [primaryMediaId, setPrimaryMediaId] = useState<number | null>(null);
     const [processing, setProcessing] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const coverInputRef = useRef<HTMLInputElement>(null);
+    const suratInputRef = useRef<HTMLInputElement>(null);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Konten Saya', href: '/kontribusi' },
@@ -36,7 +38,7 @@ export default function KontribusiEdit({ konten, kategoris, wilayahs }: Props) {
         { title: 'Edit', href: `/kontribusi/${konten.slug}/edit` },
     ];
 
-    const existingMedia = (konten.media_files ?? []).filter((m) => !deleteMediaIds.includes(m.id));
+    const existingMedia = (konten.media_files ?? []).filter((m: MediaFile) => !deleteMediaIds.includes(m.id));
 
     const handleCoverChange = (file: File) => {
         if (!file.type.startsWith('image/')) return;
@@ -60,6 +62,7 @@ export default function KontribusiEdit({ konten, kategoris, wilayahs }: Props) {
         deleteMediaIds.forEach((id) => data.append('delete_media[]', String(id)));
         if (primaryMediaId) data.append('primary_media', String(primaryMediaId));
         if (coverImage) data.append('cover_image', coverImage.file);
+        if (suratFile) data.append('surat_pernyataan', suratFile);
         router.post(`/kontribusi/${konten.slug}`, data, { onError: () => setProcessing(false) });
     };
 
@@ -162,7 +165,7 @@ export default function KontribusiEdit({ konten, kategoris, wilayahs }: Props) {
                                 {existingMedia.length > 0 && (
                                     <div className="space-y-2">
                                         <p className="text-xs font-medium text-muted-foreground">File saat ini</p>
-                                        {existingMedia.map((file) => (
+                                        {existingMedia.map((file: MediaFile) => (
                                             <div key={file.id} className={`flex items-center gap-3 rounded-lg border p-3 ${primaryMediaId === file.id || (!primaryMediaId && file.is_primary) ? 'border-primary bg-primary/5' : ''}`}>
                                                 <FileText className="size-8 text-muted-foreground" />
                                                 <div className="min-w-0 flex-1">
@@ -199,7 +202,52 @@ export default function KontribusiEdit({ konten, kategoris, wilayahs }: Props) {
                         </Card>
                     </div>
 
-                    <div>
+                    <div className="space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-base">Surat Pernyataan</CardTitle>
+                                <CardDescription className="text-xs leading-relaxed">
+                                    Sudah pernah diunggah saat submit pertama kali. Gak perlu diunggah ulang kecuali kamu mau menggantinya.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                {konten.surat_pernyataan_url && !suratFile && (
+                                    <a
+                                        href={konten.surat_pernyataan_url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex items-center gap-2 rounded-lg border bg-muted/20 p-3 text-sm transition-colors hover:border-primary/40"
+                                    >
+                                        <FileText className="size-4 shrink-0 text-muted-foreground" />
+                                        <span className="text-muted-foreground">Lihat surat pernyataan yang sudah diunggah</span>
+                                    </a>
+                                )}
+
+                                {suratFile && (
+                                    <div className="flex items-center justify-between gap-3 rounded-lg border bg-muted/20 p-3">
+                                        <div className="flex min-w-0 items-center gap-2">
+                                            <FileText className="size-4 shrink-0 text-muted-foreground" />
+                                            <span className="truncate text-sm font-medium">{suratFile.name}</span>
+                                        </div>
+                                        <button type="button" onClick={() => setSuratFile(null)} className="shrink-0 text-muted-foreground hover:text-foreground">
+                                            <X className="size-4" />
+                                        </button>
+                                    </div>
+                                )}
+
+                                <input
+                                    ref={suratInputRef}
+                                    type="file"
+                                    accept="application/pdf,.pdf,image/jpeg,image/png"
+                                    className="hidden"
+                                    onChange={(e) => setSuratFile(e.target.files?.[0] ?? null)}
+                                />
+                                <Button type="button" variant="outline" size="sm" onClick={() => suratInputRef.current?.click()}>
+                                    {konten.surat_pernyataan_url ? 'Ganti File' : 'Upload Surat Pernyataan'}
+                                </Button>
+                            </CardContent>
+                        </Card>
+
                         <Card className="sticky top-6">
                             <CardContent className="space-y-3 pt-6">
                                 <Button type="submit" className="w-full" disabled={processing}>

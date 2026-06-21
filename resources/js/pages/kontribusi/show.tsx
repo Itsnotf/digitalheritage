@@ -158,6 +158,26 @@ export default function KontribusiShow({ konten }: Props) {
                             </Card>
                         )}
 
+                        {/* Surat Pernyataan */}
+                        {konten.surat_pernyataan_url && (
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="text-sm text-muted-foreground">Surat Pernyataan</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <a
+                                        href={konten.surat_pernyataan_url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex items-center gap-3 rounded-lg border p-3 text-sm transition-colors hover:border-primary/40"
+                                    >
+                                        <FileText className="size-5 text-muted-foreground" />
+                                        <span>Lihat surat pernyataan yang sudah kamu unggah</span>
+                                    </a>
+                                </CardContent>
+                            </Card>
+                        )}
+
                         {/* Tags */}
                         {konten.tags && konten.tags.length > 0 && (
                             <div className="flex flex-wrap items-center gap-2">

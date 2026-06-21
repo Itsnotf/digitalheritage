@@ -87,6 +87,11 @@ return [
         'halaman edit'  => 'Edit Konten Halaman',
 
         // -------------------------------------------------------
+        // Surat Pernyataan (template singleton)
+        // -------------------------------------------------------
+        'surat pernyataan edit' => 'Kelola Template Surat Pernyataan',
+
+        // -------------------------------------------------------
         // Monitoring — statistik dan aktivitas platform
         // -------------------------------------------------------
         'monitoring index' => 'Lihat Monitoring Aktivitas',

@@ -33,6 +33,9 @@ class StoreKontribusiRequest extends FormRequest
                 'max:204800',  // 200MB max per file
                 'mimes:jpeg,jpg,png,webp,gif,mp4,webm,mov,mp3,wav,ogg,m4a,pdf',
             ],
+
+            // Surat pernyataan yang sudah diisi & discan — wajib di submission baru
+            'surat_pernyataan' => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png'],
         ];
     }
 
@@ -51,6 +54,9 @@ class StoreKontribusiRequest extends FormRequest
             'files.max'            => 'Maksimal 10 file per konten.',
             'files.*.max'          => 'Ukuran file maksimal 200MB.',
             'files.*.mimes'        => 'Format file tidak didukung. Format yang diterima: gambar (JPG, PNG, WEBP, GIF), video (MP4, WEBM, MOV), audio (MP3, WAV, OGG, M4A), dokumen (PDF).',
+            'surat_pernyataan.required' => 'Surat pernyataan yang sudah diisi & discan wajib diunggah.',
+            'surat_pernyataan.mimes'    => 'Format surat pernyataan harus PDF, JPG, atau PNG.',
+            'surat_pernyataan.max'      => 'Ukuran surat pernyataan maksimal 10MB.',
         ];
     }
 }

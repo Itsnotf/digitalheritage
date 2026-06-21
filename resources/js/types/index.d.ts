@@ -49,7 +49,7 @@ export type KomentarStatus = 'aktif' | 'tersembunyi';
 export interface KontenBudaya {
     id: number; user_id: number; category_id: number; wilayah_id: number;
     judul: string; slug: string; deskripsi: string; status: KontenStatus;
-    catatan_admin: string | null; cover_url: string | null; view_count: number;
+    catatan_admin: string | null; cover_url: string | null; surat_pernyataan_url: string | null; view_count: number;
     approved_by: number | null; approved_at: string | null;
     created_at: string; updated_at: string;
     user?: User; category?: Category; wilayah?: Wilayah;

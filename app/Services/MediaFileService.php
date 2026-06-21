@@ -58,6 +58,16 @@ class MediaFileService
     }
 
     /**
+     * Simpan hasil scan surat pernyataan yang sudah diisi kontributor.
+     * Menimpa file lama di konten yang sama kalau ada (resubmit/ganti).
+     */
+    public function storeSuratPernyataan(KontenBudaya $konten, UploadedFile $file): void
+    {
+        $path = $file->store("konten/{$konten->id}/surat-pernyataan", 'public');
+        $konten->update(['surat_pernyataan_url' => Storage::url($path)]);
+    }
+
+    /**
      * Jadikan satu file sebagai primary, unset yang lain.
      * Otomatis sync cover_url di konten.
      */

@@ -20,6 +20,7 @@ class KontenBudaya extends Model
         'status',
         'catatan_admin',
         'cover_url',
+        'surat_pernyataan_url',
         'view_count',
         'approved_by',
         'approved_at',

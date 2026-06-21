@@ -39,6 +39,9 @@ class UpdateKontribusiRequest extends FormRequest
 
             // ID media yang ingin dijadikan primary
             'primary_media'  => ['nullable', 'integer', 'exists:media_files,id'],
+
+            // Opsional saat edit/kirim ulang — file lama tetap dipakai kalau tidak diisi ulang
+            'surat_pernyataan' => ['nullable', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png'],
         ];
     }
 
@@ -53,6 +56,8 @@ class UpdateKontribusiRequest extends FormRequest
             'files.max'            => 'Maksimal 10 file tambahan.',
             'files.*.max'          => 'Ukuran file maksimal 200MB.',
             'files.*.mimes'        => 'Format file tidak didukung.',
+            'surat_pernyataan.mimes' => 'Format surat pernyataan harus PDF, JPG, atau PNG.',
+            'surat_pernyataan.max'   => 'Ukuran surat pernyataan maksimal 10MB.',
         ];
     }
 }

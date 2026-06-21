@@ -6,11 +6,13 @@ use App\Http\Requests\KontribusiRequest\StoreKontribusiRequest;
 use App\Http\Requests\KontribusiRequest\UpdateKontribusiRequest;
 use App\Models\KontenBudaya;
 use App\Models\MediaFile;
+use App\Models\SuratPernyataan;
 use App\Services\KategoriService;
 use App\Services\KontenBudayaService;
 use App\Services\MediaFileService;
 use App\Services\WilayahService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class KontribusiController extends Controller
 {
@@ -39,7 +41,18 @@ class KontribusiController extends Controller
         return inertia('kontribusi/create', [
             'kategoris' => $this->kategoriService->getForSelect(),
             'wilayahs'  => $this->wilayahService->getForSelect(),
+            'suratPernyataanAvailable' => (bool) SuratPernyataan::current()->file_path,
         ]);
+    }
+
+    /** Kontributor download template surat pernyataan kosong sebelum mengisi & scan ulang. */
+    public function downloadSurat()
+    {
+        $surat = SuratPernyataan::current();
+
+        abort_if(!$surat->file_path, 404, 'Surat pernyataan belum tersedia. Hubungi admin.');
+
+        return Storage::disk('public')->download($surat->file_path, $surat->filename);
     }
 
     public function store(StoreKontribusiRequest $request)
@@ -53,6 +66,11 @@ class KontribusiController extends Controller
         // Cover khusus (opsional, override cover dari media files)
         if ($request->hasFile('cover_image')) {
             $this->mediaService->storeCoverImage($konten, $request->file('cover_image'));
+        }
+
+        // Surat pernyataan yang sudah diisi & discan — wajib di submission baru
+        if ($request->hasFile('surat_pernyataan')) {
+            $this->mediaService->storeSuratPernyataan($konten, $request->file('surat_pernyataan'));
         }
 
         return redirect()
@@ -119,6 +137,12 @@ class KontribusiController extends Controller
 
         if ($request->hasFile('cover_image')) {
             $this->mediaService->storeCoverImage($kontribusi, $request->file('cover_image'));
+        }
+
+        // Opsional saat edit — kalau ditolak & kirim ulang, file lama tetap dipakai
+        // kecuali kontributor sengaja unggah ulang.
+        if ($request->hasFile('surat_pernyataan')) {
+            $this->mediaService->storeSuratPernyataan($kontribusi, $request->file('surat_pernyataan'));
         }
 
         $message = $kontribusi->wasChanged('status')

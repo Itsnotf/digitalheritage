@@ -10,6 +10,7 @@ use App\Http\Controllers\PublicKomentarController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SitePageController;
+use App\Http\Controllers\SuratPernyataanController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WilayahController;
@@ -37,6 +38,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Kontribusi
+    // Route literal HARUS di atas Route::resource, supaya 'surat-pernyataan'
+    // gak ketangkep sebagai parameter {kontribusi} oleh route show.
+    Route::get('kontribusi/surat-pernyataan/download', [KontribusiController::class, 'downloadSurat'])->name('kontribusi.surat-pernyataan.download');
     Route::resource('kontribusi', KontribusiController::class);
     Route::patch('kontribusi/{kontribusi}/revise',  [KontribusiController::class, 'respondRevise'])->name('kontribusi.revise');
     Route::patch('kontribusi/{kontribusi}/decline', [KontribusiController::class, 'respondDecline'])->name('kontribusi.decline');
@@ -62,6 +66,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('halaman/{page:key}',               [SitePageController::class, 'update'])->name('halaman.update');
     Route::post('halaman/{page:key}/hero',         [SitePageController::class, 'uploadHero'])->name('halaman.hero');
     Route::delete('halaman/{page:key}/hero',       [SitePageController::class, 'removeHero'])->name('halaman.hero.remove');
+
+    // Admin — template surat pernyataan (singleton)
+    Route::get('surat-pernyataan',  [SuratPernyataanController::class, 'edit'])->name('surat-pernyataan.edit');
+    Route::post('surat-pernyataan', [SuratPernyataanController::class, 'update'])->name('surat-pernyataan.update');
 
     // User & role management
     Route::resource('users', UserController::class);

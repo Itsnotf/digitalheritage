@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, CheckSquare, FileText, FolderOpen, Globe, KeyIcon, LayoutGrid, MapPin, MessageSquare, Tag, Upload, User } from 'lucide-react';
+import { BookOpen, CheckSquare, FileSignature, FileText, FolderOpen, Globe, KeyIcon, LayoutGrid, MapPin, MessageSquare, Tag, Upload, User } from 'lucide-react';
 import AppLogo from './app-logo';
 import users from '@/routes/users';
 import roles from '@/routes/roles';
@@ -33,6 +33,7 @@ const adminDataItems: NavItem[] = [
 
 const adminHalamanItems: NavItem[] = [
     { title: 'Manajemen Halaman', href: '/halaman', icon: FileText, permissions: ['halaman index'] },
+    { title: 'Surat Pernyataan', href: '/surat-pernyataan', icon: FileSignature, permissions: ['surat pernyataan edit'] },
 ];
 
 const userManagementItems: NavItem[] = [

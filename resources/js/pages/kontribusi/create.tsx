@@ -6,12 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, Category, Wilayah } from '@/types';
 import { Head, router } from '@inertiajs/react';
-import { FileText, Headphones, ImageIcon, Upload, Video, X } from 'lucide-react';
+import { Download, FileText, Headphones, ImageIcon, Upload, Video, X } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
 
 interface CoverPreview { file: File; preview: string }
 
-interface Props { kategoris: Category[]; wilayahs: Wilayah[] }
+interface Props { kategoris: Category[]; wilayahs: Wilayah[]; suratPernyataanAvailable: boolean }
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Konten Saya', href: '/kontribusi' },
@@ -34,9 +34,10 @@ function FileIcon({ tipe }: { tipe: string }) {
     return <FileText className="size-5 text-gray-500" />;
 }
 
-export default function KontribusiCreate({ kategoris, wilayahs }: Props) {
+export default function KontribusiCreate({ kategoris, wilayahs, suratPernyataanAvailable }: Props) {
     const [files, setFiles] = useState<FilePreview[]>([]);
     const [coverImage, setCoverImage] = useState<CoverPreview | null>(null);
+    const [suratFile, setSuratFile] = useState<File | null>(null);
     const [tags, setTags] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState('');
     const [isDragging, setIsDragging] = useState(false);
@@ -44,6 +45,7 @@ export default function KontribusiCreate({ kategoris, wilayahs }: Props) {
     const [processing, setProcessing] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const coverInputRef = useRef<HTMLInputElement>(null);
+    const suratInputRef = useRef<HTMLInputElement>(null);
 
     const [form, setForm] = useState({
         judul: '', deskripsi: '', category_id: '', wilayah_id: '',
@@ -102,6 +104,7 @@ export default function KontribusiCreate({ kategoris, wilayahs }: Props) {
         if (!form.category_id) newErrors.category_id = 'Kategori wajib dipilih.';
         if (!form.wilayah_id) newErrors.wilayah_id = 'Wilayah wajib dipilih.';
         if (files.length === 0) newErrors.files = 'Minimal 1 file media wajib diunggah.';
+        if (!suratFile) newErrors.surat_pernyataan = 'Surat pernyataan yang sudah diisi & discan wajib diunggah.';
         setErrors(newErrors);
         if (Object.keys(newErrors).length > 0) return;
 
@@ -111,6 +114,7 @@ export default function KontribusiCreate({ kategoris, wilayahs }: Props) {
         tags.forEach((t) => data.append('tags[]', t));
         files.forEach((f) => data.append('files[]', f.file));
         if (coverImage) data.append('cover_image', coverImage.file);
+        if (suratFile) data.append('surat_pernyataan', suratFile);
 
         router.post('/kontribusi', data, {
             onError: (e) => { setErrors(e); setProcessing(false); },
@@ -336,8 +340,63 @@ export default function KontribusiCreate({ kategoris, wilayahs }: Props) {
                         </Card>
                     </div>
 
-                    {/* Kolom kanan — submit */}
-                    <div>
+                    {/* Kolom kanan — surat pernyataan + submit */}
+                    <div className="space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-base">Surat Pernyataan</CardTitle>
+                                <CardDescription className="text-xs leading-relaxed">
+                                    Download surat pernyataan, print &amp; isi secara fisik, lalu unggah kembali hasil scan-nya di sini sebelum mengirim konten.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                {suratPernyataanAvailable ? (
+                                    <a href="/kontribusi/surat-pernyataan/download">
+                                        <Button type="button" variant="outline" size="sm" className="w-full">
+                                            <Download className="size-4" /> Download Surat Pernyataan
+                                        </Button>
+                                    </a>
+                                ) : (
+                                    <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
+                                        Template surat pernyataan belum tersedia. Hubungi admin sebelum mengunggah konten.
+                                    </p>
+                                )}
+
+                                <div>
+                                    <Label>Unggah Surat yang Sudah Diisi <span className="text-destructive">*</span></Label>
+
+                                    {suratFile ? (
+                                        <div className="mt-1.5 flex items-center justify-between gap-3 rounded-lg border bg-muted/20 p-3">
+                                            <div className="flex min-w-0 items-center gap-2">
+                                                <FileText className="size-5 shrink-0 text-gray-500" />
+                                                <span className="truncate text-sm font-medium">{suratFile.name}</span>
+                                            </div>
+                                            <button type="button" onClick={() => setSuratFile(null)} className="shrink-0 text-muted-foreground hover:text-foreground">
+                                                <X className="size-4" />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div
+                                            onClick={() => suratInputRef.current?.click()}
+                                            className="mt-1.5 cursor-pointer rounded-lg border-2 border-dashed p-4 text-center text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:bg-muted/30"
+                                        >
+                                            Klik untuk pilih file (PDF, JPG, atau PNG)
+                                        </div>
+                                    )}
+
+                                    <input
+                                        ref={suratInputRef}
+                                        type="file"
+                                        accept="application/pdf,.pdf,image/jpeg,image/png"
+                                        className="hidden"
+                                        onChange={(e) => setSuratFile(e.target.files?.[0] ?? null)}
+                                    />
+
+                                    {errors.surat_pernyataan && <p className="mt-1 text-xs text-destructive">{errors.surat_pernyataan}</p>}
+                                </div>
+                            </CardContent>
+                        </Card>
+
                         <Card className="sticky top-6">
                             <CardHeader>
                                 <CardTitle className="text-base">Siap Kirim?</CardTitle>
@@ -355,6 +414,7 @@ export default function KontribusiCreate({ kategoris, wilayahs }: Props) {
                                             { ok: !!form.category_id, text: 'Kategori dipilih' },
                                             { ok: !!form.wilayah_id, text: 'Wilayah dipilih' },
                                             { ok: files.length > 0, text: 'Min. 1 file diunggah' },
+                                            { ok: !!suratFile, text: 'Surat pernyataan diunggah' },
                                         ].map(({ ok, text }) => (
                                             <li key={text} className={`flex items-center gap-1.5 ${ok ? 'text-emerald-600 dark:text-emerald-400' : ''}`}>
                                                 <span>{ok ? '✓' : '○'}</span> {text}
