@@ -70,10 +70,17 @@ function AudioPlayer({ src }: { src: string }) {
     );
 }
 
-export function MediaPreviewItemView({ item, showMeta = true }: { item: MediaPreviewItem; showMeta?: boolean }) {
+export function MediaPreviewItemView({ item, showMeta = true, fullscreen = false }: { item: MediaPreviewItem; showMeta?: boolean; fullscreen?: boolean }) {
     const src = resolveUrl(item);
 
     if (item.tipe === 'image') {
+        if (fullscreen) {
+            return (
+                <div className="flex h-full w-full items-center justify-center">
+                    <img src={src} alt={item.filename} className="max-h-full max-w-full object-contain" loading="lazy" />
+                </div>
+            );
+        }
         return (
             <figure className="overflow-hidden rounded-lg border border-black/[0.06] bg-white">
                 <img src={src} alt={item.filename} className="w-full object-contain max-h-[600px]" loading="lazy" />
@@ -88,6 +95,13 @@ export function MediaPreviewItemView({ item, showMeta = true }: { item: MediaPre
     }
 
     if (item.tipe === 'video') {
+        if (fullscreen) {
+            return (
+                <div className="flex h-full w-full max-h-full max-w-full items-center justify-center">
+                    <VideoPlayer src={src} />
+                </div>
+            );
+        }
         return (
             <div className="overflow-hidden rounded-lg">
                 <VideoPlayer src={src} />

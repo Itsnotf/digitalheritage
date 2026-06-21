@@ -13,12 +13,10 @@ class RatingController extends Controller
      * Simpan atau update rating.
      * Satu user hanya bisa rating sekali — updateOrCreate untuk mengubah.
      */
-    public function store(Request $request, int $id)
+    public function store(Request $request, KontenBudaya $konten)
     {
-        $konten = KontenBudaya::findOrFail($id);
-
         abort_if($konten->status !== 'published', 403);
-        abort_if($konten->user_id === Auth::id(), 403, 'Tidak bisa memberi rating pada konten milik sendiri.');
+        abort_if((int) $konten->user_id === (int) Auth::id(), 403, 'Tidak bisa memberi rating pada konten milik sendiri.');
 
         $request->validate([
             'skor' => ['required', 'integer', 'min:1', 'max:5'],

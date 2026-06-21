@@ -155,3 +155,16 @@
     --plyr-audio-controls-background: #ffffff;
     --plyr-audio-control-color: #57534e;
 }
+
+/* ── Texture background — halaman publik (Light Gallery) ── */
+/* Tweak kerapatan/opacity di sini, kepake otomatis di semua halaman publik */
+:root {
+    --texture-dot-color: 194, 65, 12; /* rgb terracotta */
+    --texture-dot-opacity: 0.12;
+    --texture-dot-size: 16px;
+}
+.bg-texture-dots {
+    background-color: #faf9f7;
+    background-image: radial-gradient(circle, rgba(var(--texture-dot-color), var(--texture-dot-opacity)) 1px, transparent 1.6px);
+    background-size: var(--texture-dot-size) var(--texture-dot-size);
+}

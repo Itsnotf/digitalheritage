@@ -9,10 +9,8 @@ use Illuminate\Support\Facades\Auth;
 
 class PublicKomentarController extends Controller
 {
-    public function store(Request $request, int $id)
+    public function store(Request $request, KontenBudaya $konten)
     {
-        $konten = KontenBudaya::findOrFail($id);
-
         abort_if($konten->status !== 'published', 403);
 
         $request->validate([

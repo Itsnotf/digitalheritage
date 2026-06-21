@@ -55,6 +55,7 @@ export interface KontenBudaya {
     user?: User; category?: Category; wilayah?: Wilayah;
     media_files?: MediaFile[]; primary_media?: MediaFile | null;
     tags?: Tag[]; moderation_logs?: ModerationLog[]; comments_count?: number;
+    comments?: Comment[];
     first_video?: MediaFile;
     ratings_count?: number;
     ratings_avg_skor?: number | null;

@@ -13,9 +13,11 @@ interface Props {
     children: ReactNode;
     title?: string;
     breadcrumbs?: BreadcrumbItem[];
+    /** Halaman immersive (full-screen viewer) — main jadi pas tinggi viewport, tanpa padding/scroll */
+    fullBleed?: boolean;
 }
 
-export default function PublicLayout({ children, title, breadcrumbs = [] }: Props) {
+export default function PublicLayout({ children, title, breadcrumbs = [], fullBleed = false }: Props) {
     const { auth } = usePage<SharedData>().props;
     const isLoggedIn = !!auth?.user;
 
@@ -30,7 +32,7 @@ export default function PublicLayout({ children, title, breadcrumbs = [] }: Prop
             <AudioPlayerProvider>
                 <SidebarProvider defaultOpen={false} style={{ fontFamily: "'Inter', sans-serif" }}>
                     <PublicSidebar />
-                    <SidebarInset className="bg-[#faf9f7]">
+                    <SidebarInset className="bg-texture-dots">
 
                         {/* Top bar */}
                         <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-black/[0.07] bg-white px-4">
@@ -60,7 +62,7 @@ export default function PublicLayout({ children, title, breadcrumbs = [] }: Prop
                             )}
                         </header>
 
-                        <main className="min-h-[calc(100vh-3.5rem)] pb-24">
+                        <main className={fullBleed ? 'h-[calc(100vh-3.5rem)] overflow-hidden' : 'min-h-[calc(100vh-3.5rem)] pb-24'}>
                             {children}
                         </main>
 
